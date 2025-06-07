@@ -19,11 +19,24 @@ def init_candidates(path, db, Candidate):
             db.session.add(
                 Candidate(
                     username=row[0],
-                    name=row[1]
-                )
+                    name=row[1],
+                    position_id=row[2]                )
             )
         db.session.commit()
 
+def init_positions(path, db, Position):
+    with open(path) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        next(csv_reader)
+
+        for row in csv_reader:
+            db.session.add(
+                Position(
+                    id=row[0],
+                    position=row[1]
+                    )
+            )
+        db.session.commit()
 
 def setup_admin(path, db, Users, Election):
     with open(path) as json_file:
@@ -55,7 +68,8 @@ database = SQLAlchemy()
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
     DB_NAME = 'offchain6.sqlite'
-    CSV_DIR = f'{WORKING_DIRECTORY}/CSV/candidates.csv'
+    CANDIDATES_DIR = f'{WORKING_DIRECTORY}/CSV/candidates.csv'
+    POSITIONS_DIR = f'{WORKING_DIRECTORY}/CSV/positions.csv'
     ADMIN_DIR = f'{WORKING_DIRECTORY}/admin/admin.json'
 
     app = Flask(__name__)
@@ -83,9 +97,14 @@ def create_app():
                 models.Election
             )
             init_candidates(
-                CSV_DIR,
+                CANDIDATES_DIR,
                 database,
                 models.Candidate,
+            )
+            init_positions(
+                POSITIONS_DIR,
+                database,
+                models.Position
             )
             print('Database created and admin user added.')
 

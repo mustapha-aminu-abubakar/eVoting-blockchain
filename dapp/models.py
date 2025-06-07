@@ -109,6 +109,11 @@ class Candidate(database.Model):
         database.String(100),
         nullable=False
     )
+    
+    position_id = database.Column(
+        database.Integer,
+        nullable=False
+    )
 
     vote_count = database.Column(
         database.Integer,
@@ -126,12 +131,33 @@ class Candidate(database.Model):
         Candidate(
             id: {self.id}
             username: {self.username}
+            position_id: {self.position_id}
             name: {self.name}
             vote_count: {self.vote_count}
             candidate_status: {self.candidate_status}
         )
         '''
 
+class Position(database.Model):
+    id = database.Column(
+        database.Integer,
+        primary_key=True
+    )
+
+    position = database.Column(
+        database.String(100),
+        nullable=False,
+        unique=False
+    )
+
+
+    def __repr__(self) -> str:
+        return f'''
+        Position(
+            id: {self.id}
+            postion: {self.position}
+        )
+        '''
 
 class Election(database.Model):
     id = database.Column(

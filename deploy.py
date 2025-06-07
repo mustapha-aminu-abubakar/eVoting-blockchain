@@ -14,6 +14,8 @@ solcx.install_solc('0.8.19')
 w3 = Web3(Web3.HTTPProvider(WEB3_PROVIDER_URL))
 sepolia = 11155111
 
+CONTRACT_PATH = 'contract/eVote2.sol'
+
 # Input private key
 private_key = getpass.getpass(prompt='Private key: ')
 private_key = '0x'+private_key
@@ -23,7 +25,7 @@ with open('admin/admin.json') as json_file:
     admin_details = json.loads(json_file.read())
     admin_wallet = admin_details['wallet']
 sys.stdout.write(f'\r Reading contract...               ')
-with open('contract/eVote.sol', 'r') as contract_file:
+with open(CONTRACT_PATH, 'r') as contract_file:
     contract = contract_file.read()
 
 
