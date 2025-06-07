@@ -62,7 +62,7 @@ def fetch_all_voters():
 def fetch_candidate_by_id_restricted(candidate_id):
     return Candidate.query.with_entities(
         Candidate.id,
-        Candidate.username,
+        Candidate.position_id,
         Candidate.name
     ).filter_by(
         id=candidate_id
@@ -72,7 +72,7 @@ def fetch_candidate_by_id_restricted(candidate_id):
 def fetch_all_active_candidates():
     return Candidate.query.with_entities(
         Candidate.id,
-        Candidate.username,
+        Candidate.position_id,
         Candidate.name
     ).filter(
         Candidate.candidate_status == AccountStatus.ACTIVE

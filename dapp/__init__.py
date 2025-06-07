@@ -39,7 +39,7 @@ def setup_admin(path, db, Users, Election):
                     bytes(admin_user_details["username"], "UTF-8")
                 ).hexdigest(),
                 password=generate_password_hash(
-                    admin_user_details["passwd"], method="sha256"
+                    admin_user_details["passwd"]
                 ),
                 wallet_address=admin_user_details["wallet"],
                 voter_status=False,
@@ -56,7 +56,7 @@ database = SQLAlchemy()
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain6.sqlite"
+    DB_NAME = "offchain24.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
@@ -66,7 +66,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_NAME}"
     app.config["EPOCH"] = not os.path.exists(f"{WORKING_DIRECTORY}/instance/{DB_NAME}")
     # app.config['EPOCH'] = not os.path.exists(DB_NAME)
-    app.config["SQLALCHEMY_ECHO"] = True
+    app.config["SQLALCHEMY_ECHO"] = False
 
     database.init_app(app)
 

@@ -34,7 +34,7 @@ class Blockchain:
             self._ABI = json.loads(ABI_file.read())
 
     def _get_nonce(self):
-        return self.w3.eth.getTransactionCount(self._wallet_address)
+        return self.w3.eth.get_transaction_count(self._wallet_address)
 
     def local_to_utc_timestamp(self, local_timestamp: int) -> int:
         local_tz = get_localzone()
@@ -59,7 +59,7 @@ class Blockchain:
             tx = self._contract_instance.functions.setVotingTime(
                 start_utc,
                 end_utc
-            ).buildTransaction({
+            ).build_transaction({
                 "gasPrice": self.w3.eth.gas_price,
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
@@ -73,7 +73,7 @@ class Blockchain:
         try:
             tx = self._contract_instance.functions.extendVotingTime(
                 new_end_time
-            ).buildTransaction({
+            ).build_transaction({
                 "gasPrice": self.w3.eth.gas_price,
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
@@ -90,7 +90,7 @@ class Blockchain:
                 int(position_id),
                 f'0x{voter_hash}',
                 f'0x{candidate_hash}'
-            ).buildTransaction({
+            ).build_transaction({
                 "gasPrice": self.w3.eth.gas_price,
                 "gas": 2000000,
                 "chainId": self.sepolia,
@@ -117,7 +117,7 @@ class Blockchain:
     #         tx = self._contract_instance.functions.registerCandidate(
     #             int(position_id),
     #             f'0x{candidate_hash}'
-    #         ).buildTransaction({
+    #         ).build_transaction({
     #             "gasPrice": self.w3.eth.gas_price,
     #             "chainId": self.sepolia,
     #             "from": self._wallet_address,
@@ -127,14 +127,14 @@ class Blockchain:
     #     except Exception as e:
     #         return (False, str(e))
 
-    def get_candidates(self, position_id):
-        try:
-            return [
-                candidate.hex() for candidate in
-                self._contract_instance.functions.getCandidates(position_id).call()
-            ]
-        except Exception as e:
-            return f"Error fetching candidates: {str(e)}"
+    # def get_candidates(self, position_id):
+    #     try:
+    #         return [
+    #             candidate.hex() for candidate in
+    #             self._contract_instance.functions.getCandidates(position_id).call()
+    #         ]
+    #     except Exception as e:
+    #         return f"Error fetching candidates: {str(e)}"
 
     def print_current_block_timestamp(self):
         timestamp = self._contract_instance.functions.getCurrentTimestamp().call()
@@ -143,10 +143,10 @@ class Blockchain:
 
     def _send_tx(self, tx, private_key):
         private_key = f'0x{private_key}'
-        print(" Signing Tx...")
+        print(f" Signing Tx...{private_key}")
         signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=private_key)
         print(" Sending Tx...")
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
         print(tx_receipt['transactionHash'].hex())
@@ -155,13 +155,20 @@ class Blockchain:
     def fund_wallet(self, to_address):
         tx = {
             'to': to_address,
-            'value': self.w3.toWei(0.002, 'ether'),
+            'value': self.w3.to_wei(0.002, 'ether'),
             'gas': 21000,
-            'gasPrice': self.w3.eth.gas_price,
-            "nonce": self._get_nonce(),
-            'chainId': self.sepolia
+            'nonce': self._get_nonce(),
+            'chainId': self.sepolia,
+            'maxFeePerGas': self.w3.eth.gas_price,
+            'maxPriorityFeePerGas': self.w3.to_wei(0.00005, 'gwei'),
+            'type': 2  # EIP-1559 transaction type
         }
-        signed_tx = self.w3.eth.account.sign_transaction(tx, ADMIN_PRIVATE_KEY)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        print(f"user's wallet balance: {self.w3.eth.get_balance(to_address)}")
-        return tx_hash.hex()
+        # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
+        # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")    
+
+        try:
+            return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
+        except Exception as e:
+            return (False, str(e))
+
+        

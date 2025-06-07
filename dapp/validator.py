@@ -94,7 +94,7 @@ def build_vote_cast_hash(
     # If first voter
     if not voters_by_selected_candidate:
         return (
-            sha256_hash(selected_candidate.username),
+            sha256_hash(selected_candidate.name+str(selected_candidate.id)),
             sha256_hash(current_voter.username_hash+str(current_voter.id))
         )
 

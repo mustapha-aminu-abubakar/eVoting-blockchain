@@ -58,13 +58,15 @@ def cast_vote(candidate_id):
     )
 
     print(f'''
+        voter: {voter}
         candidate hash: {candidate_hash}
         vote_hash: {vote_hash}
+        private_key: {private_key}
     ''')
 
     # Sending transaction for vote cast
     blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
-    status, tx_msg = blockchain.vote(private_key, candidate_hash, vote_hash)
+    status, tx_msg = blockchain.vote(private_key, selected_candidate.position_id, vote_hash, candidate_hash)
 
     if status:
         flash(f'Transaction confirmed: {tx_msg}')

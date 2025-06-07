@@ -117,7 +117,7 @@ def signup_post():
     
     # Create hashs
     username_hash = sha256_hash(username)
-    password_hash = generate_password_hash(password, method='sha256')
+    password_hash = generate_password_hash(password)
     # password_enc = encrypt_object(password)
 
     # Validate inputs
@@ -158,7 +158,7 @@ def signup_post():
         # Create user wallet
         new_wallet = Account.create()
         address = new_wallet.address
-        private_key = new_wallet.key.hex()[2:]  # Remove '0x' prefix
+        private_key = new_wallet.key.hex()  # Remove '0x' prefix
 
         print(f'New wallet address: {address}')
         print(f'New wallet private key: {private_key}') 
@@ -170,7 +170,7 @@ def signup_post():
             encrypt_object(email),
             address,
             encrypt_object(private_key),  # Remove '0x' prefix
-            generate_password_hash(otp, method='sha256')
+            generate_password_hash(otp)
         )
 
         # Create blokchain object
@@ -180,7 +180,8 @@ def signup_post():
         )
 
         # Fund wallet
-        blockchain.fund_wallet(address)
+        _, status = blockchain.fund_wallet(address)
+        print(status)
 
         return render_template('otp.html', username_hash=username_hash)
 

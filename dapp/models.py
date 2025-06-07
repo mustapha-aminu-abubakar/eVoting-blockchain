@@ -130,7 +130,6 @@ class Candidate(database.Model):
         return f'''
         Candidate(
             id: {self.id}
-            # username: {self.username}
             position_id: {self.position_id}
             name: {self.name}
             vote_count: {self.vote_count}

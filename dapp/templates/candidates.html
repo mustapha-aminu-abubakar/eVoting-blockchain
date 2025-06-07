@@ -32,7 +32,7 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Username</th>
+            <th>Position</th>
             <th>Name</th>
             <th>Cast vote</th>
         </tr>
@@ -41,7 +41,7 @@
 
         {% for candidate in candidates %}
         <tr>
-            <td>{{ candidate.username }}</td>
+            <td>{{ candidate.position_id }}</td>
             <td>{{ candidate.name }}</td>
             <td>
                 {% if not user.vote_status %}
