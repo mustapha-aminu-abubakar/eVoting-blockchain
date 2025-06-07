@@ -12,31 +12,23 @@ from .cryptography import encrypt_object
 
 def init_candidates(path, db, Candidate):
     with open(path) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+        csv_reader = csv.reader(csv_file, delimiter=",")
         next(csv_reader)
 
         for row in csv_reader:
-            db.session.add(
-                Candidate(
-                    username=row[0],
-                    name=row[1],
-                    position_id=row[2]                )
-            )
+            db.session.add(Candidate(id=row[0], name=row[1], position_id=row[2]))
         db.session.commit()
+
 
 def init_positions(path, db, Position):
     with open(path) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+        csv_reader = csv.reader(csv_file, delimiter=",")
         next(csv_reader)
 
         for row in csv_reader:
-            db.session.add(
-                Position(
-                    id=row[0],
-                    position=row[1]
-                    )
-            )
+            db.session.add(Position(id=row[0], position=row[1]))
         db.session.commit()
+
 
 def setup_admin(path, db, Users, Election):
     with open(path) as json_file:
@@ -44,20 +36,17 @@ def setup_admin(path, db, Users, Election):
         db.session.add(
             Users(
                 username_hash=hashlib.sha256(
-                    bytes(admin_user_details["username"], 'UTF-8')
+                    bytes(admin_user_details["username"], "UTF-8")
                 ).hexdigest(),
                 password=generate_password_hash(
-                    admin_user_details["passwd"],
-                    method='sha256'
+                    admin_user_details["passwd"], method="sha256"
                 ),
                 wallet_address=admin_user_details["wallet"],
-                voter_status=False
+                voter_status=False,
             )
         )
         db.session.add(
-            Election(
-                contract_address=admin_user_details["contract_address"]
-            )
+            Election(contract_address=admin_user_details["contract_address"])
         )
         db.session.commit()
 
@@ -67,49 +56,38 @@ database = SQLAlchemy()
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = 'offchain6.sqlite'
-    CANDIDATES_DIR = f'{WORKING_DIRECTORY}/CSV/candidates.csv'
-    POSITIONS_DIR = f'{WORKING_DIRECTORY}/CSV/positions.csv'
-    ADMIN_DIR = f'{WORKING_DIRECTORY}/admin/admin.json'
+    DB_NAME = "offchain6.sqlite"
+    CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
+    POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
+    ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
 
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'secret-key'
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-    app.config['EPOCH'] = not os.path.exists(
-        f'{WORKING_DIRECTORY}/instance/{DB_NAME}'
-    )
+    app.config["SECRET_KEY"] = "secret-key"
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_NAME}"
+    app.config["EPOCH"] = not os.path.exists(f"{WORKING_DIRECTORY}/instance/{DB_NAME}")
     # app.config['EPOCH'] = not os.path.exists(DB_NAME)
-    app.config['SQLALCHEMY_ECHO'] = False
-
+    app.config["SQLALCHEMY_ECHO"] = True
 
     database.init_app(app)
 
     from . import models
+
     with app.app_context():
         database.create_all()
 
-        if app.config['EPOCH']:
-            print('Creating database and adding admin user...')
-            setup_admin(
-                ADMIN_DIR,
-                database,
-                models.Voter,
-                models.Election
-            )
+        if app.config["EPOCH"]:
+            print("Creating database and adding admin user...")
+            setup_admin(ADMIN_DIR, database, models.Voter, models.Election)
             init_candidates(
                 CANDIDATES_DIR,
                 database,
                 models.Candidate,
             )
-            init_positions(
-                POSITIONS_DIR,
-                database,
-                models.Position
-            )
-            print('Database created and admin user added.')
+            init_positions(POSITIONS_DIR, database, models.Position)
+            print("Database created and admin user added.")
 
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.index'
+    login_manager.login_view = "auth.index"
     login_manager.init_app(app)
 
     @login_manager.user_loader
@@ -117,12 +95,15 @@ def create_app():
         return models.Voter.query.get(int(user_id))
 
     from .main import main as main_blueprint
+
     app.register_blueprint(main_blueprint)
 
     from .auth import auth as auth_blueprint
+
     app.register_blueprint(auth_blueprint)
 
     from .admin import admin as admin_blueprint
+
     app.register_blueprint(admin_blueprint)
 
     return app
