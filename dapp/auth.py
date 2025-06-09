@@ -93,7 +93,7 @@ def signin_post():
 
     # Start login session
     login_user(voter)
-    return redirect(url_for('main.candidates'))
+    return redirect(url_for('main.positions'))
 
 
 @auth.route('/logout')

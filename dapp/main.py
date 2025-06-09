@@ -9,7 +9,8 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_voters_by_candidate_id,
                             fetch_all_positions,
                             fetch_position_by_id,
-                            fetch_candidate_by_position_id)
+                            fetch_candidate_by_position_id,
+                            has_voted_for_position)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import build_vote_cast_hash, count_max_vote_owner_id, is_admin, sha256_hash
@@ -19,22 +20,31 @@ from .cryptography import encrypt_object, decrypt_object
 main = Blueprint('main', __name__)
 
 
-@main.route('/candidates')
-@login_required
-def candidates():
-    'Shows the active candidate list and voter details'
+# @main.route('/candidates')
+# @login_required
+# def candidates():
+#     'Shows the active candidate list and voter details'
 
+#     # Access deny for ADMIN
+#     if is_admin(current_user):
+#         return redirect(url_for('auth.index'))
+
+#     candidates = fetch_all_active_candidates()
+
+#     return render_template(
+#         'candidates.html',
+#         user=current_user,
+#         candidates=candidates
+#     )
+
+def position_status(position_id):
+    'Check if the user has voted for the position'
+    
     # Access deny for ADMIN
     if is_admin(current_user):
         return redirect(url_for('auth.index'))
 
-    candidates = fetch_all_active_candidates()
-
-    return render_template(
-        'candidates.html',
-        user=current_user,
-        candidates=candidates
-    )
+    return has_voted_for_position(current_user.id, position_id)
 
 @main.route('/positions')
 @login_required
@@ -64,14 +74,17 @@ def position(position_id):
 
     position = fetch_position_by_id(position_id)
     candidates = fetch_candidate_by_position_id(position_id)
+    position_status = has_voted_for_position(current_user.id, position_id)
+    
     if not position or not candidates:
         flash('Position or candidates not found')
         return redirect(url_for('main.positions'))
     
     return render_template(
-        'position.html',
+        'candidates.html',
         user=current_user,
         position=position,
+        # position_status=position_status,
         candidates=candidates
     )
     
@@ -92,6 +105,12 @@ def cast_vote(candidate_id):
     # Get candidate and voter
     selected_candidate = fetch_candidate_by_id(candidate_id)
     voter = fetch_voter_by_id(current_user.id)
+    
+    # Check if user has already voted a candidate for this position
+    status, msg = add_new_vote_record(voter, selected_candidate)
+    if not status:
+        flash(msg)
+        return redirect(url_for('main.candidates'))
 
     # Generate hash
     candidate_hash, vote_hash = build_vote_cast_hash(

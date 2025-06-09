@@ -148,8 +148,7 @@ class Position(database.Model):
         nullable=False,
         unique=False
     )
-
-
+    
     def __repr__(self) -> str:
         return f'''
         Position(

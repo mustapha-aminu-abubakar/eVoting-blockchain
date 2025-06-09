@@ -158,7 +158,7 @@ def is_wallet_address_already_exists(wallet_address):
         return True
     return False
 
-def is_voted_by_position(voter_id, position_id):
+def has_voted_for_position(voter_id, position_id):
     if Vote.query.filter_by(voter_id=voter_id, position_id=position_id).first():
         return True
     return False
