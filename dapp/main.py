@@ -37,14 +37,14 @@ main = Blueprint('main', __name__)
 #         candidates=candidates
 #     )
 
-def position_status(position_id):
-    'Check if the user has voted for the position'
+# def position_status(position_id):
+#     'Check if the user has voted for the position'
     
-    # Access deny for ADMIN
-    if is_admin(current_user):
-        return redirect(url_for('auth.index'))
+#     # Access deny for ADMIN
+#     if is_admin(current_user):
+#         return redirect(url_for('auth.index'))
 
-    return has_voted_for_position(current_user.id, position_id)
+#     return has_voted_for_position(current_user.id, position_id)
 
 @main.route('/positions')
 @login_required
@@ -59,13 +59,14 @@ def positions():
     return render_template(
         'positions.html',
         user=current_user,
-        positions=positions
+        positions=positions,
+        has_voted_for_position=has_voted_for_position
     )
     
     
-@main.route('/position/<int:position_id>')
+@main.route('/positions/<int:position_id>')
 @login_required
-def position(position_id):
+def position(position_id, has_voted_for_position_id):
     'Shows the contested position details'
 
     # Access deny for ADMIN
@@ -74,7 +75,6 @@ def position(position_id):
 
     position = fetch_position_by_id(position_id)
     candidates = fetch_candidate_by_position_id(position_id)
-    position_status = has_voted_for_position(current_user.id, position_id)
     
     if not position or not candidates:
         flash('Position or candidates not found')
@@ -84,7 +84,7 @@ def position(position_id):
         'candidates.html',
         user=current_user,
         position=position,
-        # position_status=position_status,
+        has_voted_for_position_id=has_voted_for_position_id,
         candidates=candidates
     )
     

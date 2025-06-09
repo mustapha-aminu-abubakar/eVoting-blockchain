@@ -28,17 +28,24 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Serial No.</th>
             <th>Position</th>
+            <th>Position vote status</th>
         </tr>
     </thead>
     <tbody>
 
-    {% for i, position in enumerate(positions) %}
-        <a href="{{ url_for('main.position', position_id=position.id) }}">
+    {% for position in positions %}
         <tr>
-            <td>{{ i }}</td>
             <td>{{ position.position }}</td>
+            <td>
+            {% if has_voted_for_position(user.id, position.id) %}
+                <button type="button" class="btn btn-sm btn-secondary" disabled>Voted</button>
+            {% else %}
+                <a href="{{ url_for('main.position', position_id=position.id) }}">
+                    <button type="button" class="btn btn-sm btn-success">Select</button>
+                </a>
+             </td>
+            {% endif %}
         </tr>
         </a>
     {% endfor %}
