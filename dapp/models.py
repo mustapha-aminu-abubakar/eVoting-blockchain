@@ -67,11 +67,11 @@ class Voter(database.Model, UserMixin):
         default=''
     )
 
-    vote_status = database.Column(
-        database.Integer,
-        nullable=False,
-        default=0
-    )
+    # vote_status = database.Column(
+    #     database.Integer,
+    #     nullable=False,
+    #     default=0
+    # )
 
     voter_status = database.Column(
         database.Boolean,
@@ -181,5 +181,40 @@ class Election(database.Model):
             id: {self.id}
             contract_address: {self.contract_address}
             status: {self.status}
+        )
+        '''
+
+class Vote(database.Model):
+    id = database.Column(database.Integer, primary_key=True)
+
+    voter_id = database.Column(
+        database.Integer,
+        database.ForeignKey('voter.id'),
+        nullable=False
+    )
+
+    position_id = database.Column(
+        database.Integer,
+        database.ForeignKey('position.id'),
+        nullable=False
+    )
+
+    candidate_id = database.Column(
+        database.Integer,
+        database.ForeignKey('candidate.id'),
+        nullable=False
+    )
+
+    __table_args__ = (
+        database.UniqueConstraint('voter_id', 'position_id', name='unique_vote_per_position'),
+    )
+
+    def __repr__(self) -> str:
+        return f'''
+        Vote(
+            id: {self.id}
+            voter_id: {self.voter_id}
+            position_id: {self.position_id}
+            candidate_id: {self.candidate_id}
         )
         '''

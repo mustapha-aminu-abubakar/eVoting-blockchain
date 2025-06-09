@@ -1,5 +1,5 @@
 from . import database
-from .models import Candidate, Election, Otp, Voter
+from .models import Candidate, Election, Otp, Vote, Voter, Position
 from .role import AccountStatus, UserRole
 
 # Retrieve section
@@ -94,6 +94,20 @@ def fetch_encrypted_private_key(username_hash):
     user = Voter.query.filter_by(username_hash=username_hash).first()
     return user.encrypted_private_key
 
+def fetch_all_positions():
+    positions = Position.query.all()
+    return positions
+
+def fetch_position_by_id(position_id):
+    return Position.query.filter_by(
+        id=position_id
+    ).first()
+    
+def fetch_candidate_by_position_id(position_id):
+    return Candidate.query.filter_by(
+        position_id=position_id
+    ).all()
+
 # Block section
 
 
@@ -144,13 +158,39 @@ def is_wallet_address_already_exists(wallet_address):
         return True
     return False
 
+def is_voted_by_position(voter_id, position_id):
+    if Vote.query.filter_by(voter_id=voter_id, position_id=position_id).first():
+        return True
+    return False
+
 # Add/Delete section
 
 
+# def add_new_vote_record(voter, candidate):
+#     voter.vote_status = candidate.id
+#     candidate.vote_count += 1
+#     database.session.commit()
+
 def add_new_vote_record(voter, candidate):
-    voter.vote_status = candidate.id
+    # Check if voter has already voted for this position
+    if Vote.query.filter_by(
+        voter_id=voter.id,
+        position_id=candidate.position_id
+    ).first():
+        return False, "Voter has already voted for this position."
+
+    # Add the new vote
+    new_vote = Vote(
+        voter_id=voter.id,
+        candidate_id=candidate.id,
+        position_id=candidate.position_id
+    )
+
     candidate.vote_count += 1
+    database.session.add(new_vote)
     database.session.commit()
+    return True, "Vote recorded successfully."
+
 
 
 def add_new_voter_signup(

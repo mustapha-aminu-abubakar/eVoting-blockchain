@@ -6,7 +6,10 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_candidate_by_id_restricted,
                             fetch_contract_address, fetch_election,
                             fetch_election_result, fetch_voter_by_id,
-                            fetch_voters_by_candidate_id)
+                            fetch_voters_by_candidate_id,
+                            fetch_all_positions,
+                            fetch_position_by_id,
+                            fetch_candidate_by_position_id)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import build_vote_cast_hash, count_max_vote_owner_id, is_admin, sha256_hash
@@ -33,7 +36,47 @@ def candidates():
         candidates=candidates
     )
 
+@main.route('/positions')
+@login_required
+def positions():
+    'Shows the contested positions'
+    
+    # Access deny for ADMIN
+    if is_admin(current_user):
+        return redirect(url_for('auth.index'))
+    
+    positions = fetch_all_positions()
+    return render_template(
+        'positions.html',
+        user=current_user,
+        positions=positions
+    )
+    
+    
+@main.route('/position/<int:position_id>')
+@login_required
+def position(position_id):
+    'Shows the contested position details'
 
+    # Access deny for ADMIN
+    if is_admin(current_user):
+        return redirect(url_for('auth.index'))
+
+    position = fetch_position_by_id(position_id)
+    candidates = fetch_candidate_by_position_id(position_id)
+    if not position or not candidates:
+        flash('Position or candidates not found')
+        return redirect(url_for('main.positions'))
+    
+    return render_template(
+        'position.html',
+        user=current_user,
+        position=position,
+        candidates=candidates
+    )
+    
+    
+    
 @main.route('/cast_vote/<int:candidate_id>')
 @login_required
 def cast_vote(candidate_id):
