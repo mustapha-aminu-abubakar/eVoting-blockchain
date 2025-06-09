@@ -56,7 +56,7 @@ database = SQLAlchemy()
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain24.sqlite"
+    DB_NAME = "offchain30.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"

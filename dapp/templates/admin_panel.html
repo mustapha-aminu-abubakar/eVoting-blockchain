@@ -61,7 +61,8 @@
             {% for candidate in candidates %}
             <tr class="{{ 'success' if candidate.id in max_vote_owner_id else 'active' }}">
                 <td>{{ candidate.username }}</td>
-                <td>{{ candidate.name }}</td>
+                <td>{{ candidate.name }}</td>                
+                <td>{{ candidate.position.position }}</td>
                 <td>{{ candidate.vote_count }}</td>
                 <td>
                     <a href="{{ url_for('admin.block_candidate', candidate_id=candidate.id) }}">
@@ -84,7 +85,7 @@
     <h2>
         Voters
         <span class="label label-default pull-right">
-            {{ total_vote_cast }} / {{ total_voter }}
+            {{ total_voter }}
         </span>
     </h2>
 
@@ -102,7 +103,19 @@
             <tr class="{{ 'success' if voter.vote_status else 'active' }}">
                 <td>{{ voter.username_hash }}</td>
                 <td>{{ voter.wallet_address }}</td>
-                <td>{{ 'VOTED' if voter.vote_status else 'NOT VOTED'}}</td>
+                {% if count_votes_by_voter(voter.id) == positions_count %}
+                <td>
+                    <span class="label label-success">Voted</span>
+                </td>
+                {% elif count_votes_by_voter(voter.id) == 0 %}
+                <td>
+                    <span class="label label-danger">Not voted</span>
+                </td>
+                {% else %}
+                <td>
+                    <span class="label label-warning">Not completed</span>
+                </td>
+                {% endif %}
                 <td>
                     <a href="{{ url_for('admin.block_voter', voter_id=voter.id) }}">
                         <button type="button"

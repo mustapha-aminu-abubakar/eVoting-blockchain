@@ -41,13 +41,12 @@
             {% if has_voted_for_position(user.id, position.id) %}
                 <button type="button" class="btn btn-sm btn-secondary" disabled>Voted</button>
             {% else %}
-                <a href="{{ url_for('main.position', position_id=position.id) }}">
+                <a href="{{ url_for('main.position', position_id=position.id, has_voted_for_position_id='false') }}">
                     <button type="button" class="btn btn-sm btn-success">Select</button>
                 </a>
              </td>
             {% endif %}
-        </tr>
-        </a>
+            </tr>
     {% endfor %}
     </tbody>
 </table>

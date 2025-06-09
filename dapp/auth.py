@@ -39,7 +39,7 @@ def index():
     if is_admin(current_user):
         return redirect(url_for('admin.admin_panel'))
 
-    return redirect(url_for('main.candidates'))
+    return redirect(url_for('main.positions'))
 
 
 @auth.route('/signup')

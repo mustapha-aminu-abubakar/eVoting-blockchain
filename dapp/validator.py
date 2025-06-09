@@ -117,7 +117,7 @@ def build_vote_cast_hash(
         vote_cast_nonce += current_voter.id
 
     return (
-        sha256_hash(selected_candidate.username),
+        sha256_hash(selected_candidate.name),
         sha256_hash(hash_concat+str(vote_cast_nonce))
     )
 

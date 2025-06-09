@@ -25,10 +25,18 @@ def fetch_election():
     ).first()
 
 
+# def fetch_voters_by_candidate_id(candidate_id):
+#     return Voter.query.filter_by(
+#         vote_status=candidate_id
+#     ).order_by(Voter.id).all()
 def fetch_voters_by_candidate_id(candidate_id):
-    return Voter.query.filter_by(
-        vote_status=candidate_id
-    ).order_by(Voter.id).all()
+    return (
+        Voter.query
+        .join(Vote, Voter.id == Vote.voter_id)
+        .filter(Vote.candidate_id == candidate_id)
+        .order_by(Voter.id)
+        .all()
+    )
 
 
 def fetch_election_result():
@@ -107,6 +115,15 @@ def fetch_candidate_by_position_id(position_id):
     return Candidate.query.filter_by(
         position_id=position_id
     ).all()
+    
+def count_votes_by_voter(voter_id):
+    return Vote.query.filter_by(voter_id=voter_id).count()
+
+def count_total_votes_cast():
+    return Vote.query.count()
+
+def count_total_possible_votes():
+    return Voter.query.count() * Position.query.count()
 
 # Block section
 
@@ -208,7 +225,6 @@ def add_new_voter_signup(
             email_encrypted=email_encrypted,
             wallet_address=wallet_address,
             private_key_encrypted=private_key_encrypted,
-            vote_status=False
         )
     )
     database.session.add(

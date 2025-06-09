@@ -6,9 +6,11 @@ from flask_login import current_user, login_required
 from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_admin_wallet_address, fetch_all_voters,
                             fetch_contract_address, fetch_election,
-                            fetch_election_result,
+                            fetch_election_result, count_votes_by_voter,
                             fetch_election_result_restricted,
-                            fetch_voters_by_candidate_id, publish_result)
+                            fetch_voters_by_candidate_id, publish_result,
+                            count_total_votes_cast, count_total_possible_votes,
+                            fetch_all_positions)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import (convert_to_unix_timestamp, count_max_vote_owner_id,
@@ -31,9 +33,12 @@ def admin_panel():
     election = fetch_election()
     voters = fetch_all_voters()
     candidates = fetch_election_result_restricted()
+    total_votes_possible = count_total_possible_votes()
+    total_votes_cast = count_total_votes_cast()
+    positions_count = len(fetch_all_positions())
 
     # How many voted
-    total_vote_cast = count_total_vote_cast(voters)
+    # total_vote_cast = count_total_vote_cast(voters)
     # Max vote and IDs
     total_vote_count, max_vote_owner_id = count_max_vote_owner_id(candidates)
 
@@ -45,7 +50,11 @@ def admin_panel():
         voters=voters,
         total_voter=len(voters),
         total_vote_count=total_vote_count,
-        total_vote_cast=total_vote_cast
+        total_votes_possible=total_votes_possible,
+        positions_count=positions_count,
+        total_votes_cast=total_votes_cast,
+        count_votes_by_voter=count_votes_by_voter,
+        # total_vote_cast=total_vote_cast
     )
 
 

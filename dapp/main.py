@@ -66,7 +66,7 @@ def positions():
     
 @main.route('/positions/<int:position_id>')
 @login_required
-def position(position_id, has_voted_for_position_id):
+def position(position_id):
     'Shows the contested position details'
 
     # Access deny for ADMIN
@@ -75,6 +75,9 @@ def position(position_id, has_voted_for_position_id):
 
     position = fetch_position_by_id(position_id)
     candidates = fetch_candidate_by_position_id(position_id)
+    
+    has_voted_for_position_id = request.args.get('has_voted_for_position_id', default=False, type=lambda v: v.lower() == 'true')
+
     
     if not position or not candidates:
         flash('Position or candidates not found')
@@ -110,7 +113,7 @@ def cast_vote(candidate_id):
     status, msg = add_new_vote_record(voter, selected_candidate)
     if not status:
         flash(msg)
-        return redirect(url_for('main.candidates'))
+        return redirect(url_for('main.positions'))
 
     # Generate hash
     candidate_hash, vote_hash = build_vote_cast_hash(
@@ -142,7 +145,7 @@ def cast_vote(candidate_id):
     #     selected_candidate=selected_candidate,
     #     private_key=private_key
     # )
-    return redirect(url_for('main.candidates'))
+    return redirect(url_for('main.positions'))
 
 
 

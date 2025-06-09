@@ -88,7 +88,6 @@ class Voter(database.Model, UserMixin):
             email_encrypted: {self.email_encrypted}
             wallet_address: {self.wallet_address}
             private_key_encrypted: {self.private_key_encrypted}
-            vote_status: {self.vote_status}
             voter_status: {self.voter_status}
         )
         '''
@@ -112,8 +111,10 @@ class Candidate(database.Model):
     
     position_id = database.Column(
         database.Integer,
+        database.ForeignKey('position.id'), 
         nullable=False
     )
+
 
     vote_count = database.Column(
         database.Integer,
@@ -125,6 +126,8 @@ class Candidate(database.Model):
         nullable=False,
         default=True
     )
+
+    position = database.relationship("Position", backref="candidates")
 
     def __repr__(self) -> str:
         return f'''
@@ -207,6 +210,9 @@ class Vote(database.Model):
     __table_args__ = (
         database.UniqueConstraint('voter_id', 'position_id', name='unique_vote_per_position'),
     )
+    
+    voter = database.relationship('Voter', backref='votes')
+    candidate = database.relationship('Candidate', backref='votes')
 
     def __repr__(self) -> str:
         return f'''
