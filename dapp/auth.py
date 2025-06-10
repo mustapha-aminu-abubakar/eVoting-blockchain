@@ -12,7 +12,8 @@ from .db_operations import (add_new_voter_signup, delete_OTP,
                             is_username_hash_already_exists,
                             fetch_encrypted_private_key,
                             is_wallet_address_already_exists,
-                            is_email_already_exists)
+                            is_email_already_exists,
+                            update_voter_wallet_by_username)
 from .mail_server import MailServer
 from .role import AccountStatus
 from .validator import (generate_opt, is_admin, sha256_hash, validate_signin,
@@ -24,6 +25,33 @@ from eth_account import Account
 
 auth = Blueprint('auth', __name__)
 
+def fund_new_user_wallet(username_hash):
+    # Create user wallet
+    new_wallet = Account.create()
+    address = new_wallet.address
+    private_key = new_wallet.key.hex()  
+    print(f'New wallet address: {address}')
+    print(f'New wallet private key: {private_key}') 
+
+    user_wallet_update, e = update_voter_wallet_by_username(
+        username_hash,
+        address,
+        encrypt_object(private_key)
+    )
+    
+    if not user_wallet_update:
+        flash(f'Error updating wallet: {e}')
+        return redirect(url_for('auth.index'))
+    
+    # Create blokchain object
+    blockchain = Blockchain(
+        fetch_admin_wallet_address(),
+        fetch_contract_address()
+    )
+
+    # Fund wallet
+    _, status = blockchain.fund_wallet(address)
+    flash(status)    
 
 @auth.route('/')
 def index():
@@ -156,32 +184,33 @@ def signup_post():
             flash(f'Enter the code sent to {email}')
         
         # Create user wallet
-        new_wallet = Account.create()
-        address = new_wallet.address
-        private_key = new_wallet.key.hex()  # Remove '0x' prefix
+        # new_wallet = Account.create()
+        # address = new_wallet.address
+        # private_key = new_wallet.key.hex()  # Remove '0x' prefix
 
-        print(f'New wallet address: {address}')
-        print(f'New wallet private key: {private_key}') 
+        # print(f'New wallet address: {address}')
+        # print(f'New wallet private key: {private_key}') 
 
         # Add new user off-chain to DB
         add_new_voter_signup(
             username_hash,
             password_hash,
             encrypt_object(email),
-            address,
-            encrypt_object(private_key),  # Remove '0x' prefix
+            '',
+            '',  # Remove '0x' prefix
             generate_password_hash(otp)
         )
+        
 
-        # Create blokchain object
-        blockchain = Blockchain(
-            fetch_admin_wallet_address(),
-            fetch_contract_address()
-        )
+        # # Create blokchain object
+        # blockchain = Blockchain(
+        #     fetch_admin_wallet_address(),
+        #     fetch_contract_address()
+        # )
 
-        # Fund wallet
-        _, status = blockchain.fund_wallet(address)
-        print(status)
+        # # Fund wallet
+        # _, status = blockchain.fund_wallet(address)
+        # print(status)
 
         return render_template('otp.html', username_hash=username_hash)
 
@@ -202,7 +231,7 @@ def verify_otp_post(username_hash):
     # OTP match
     if check_password_hash(otp.otp, user_otp):
         delete_OTP(otp)
-
+        fund_new_user_wallet(username_hash)
         flash('Voter registration complete')
         return redirect(url_for('auth.index'))
 

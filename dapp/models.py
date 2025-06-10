@@ -57,13 +57,13 @@ class Voter(database.Model, UserMixin):
     wallet_address = database.Column(
         database.String(42),
         unique=True,
-        nullable=False
+        nullable=False,
+        default=''
     )
 
     private_key_encrypted = database.Column(
         database.String(88),
         nullable=False,
-        unique=True,
         default=''
     )
 
@@ -126,6 +126,13 @@ class Candidate(database.Model):
         nullable=False,
         default=True
     )
+    
+    # ✅ Add this field
+    candidate_hash = database.Column(
+        database.String(66),  # 0x-prefixed hex string of 32 bytes
+        unique=True,
+        nullable=False
+    )
 
     position = database.relationship("Position", backref="candidates")
 
@@ -137,6 +144,7 @@ class Candidate(database.Model):
             name: {self.name}
             vote_count: {self.vote_count}
             candidate_status: {self.candidate_status}
+            candidate_hash: {self.candidate_hash}
         )
         '''
 

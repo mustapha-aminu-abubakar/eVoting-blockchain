@@ -111,30 +111,30 @@ class Blockchain:
         except Exception as e:
             return f"Error fetching votes: {str(e)}"
 
-    # def register_candidate(self, private_key, position_id, candidate_hash):
-    #     'Admin-only: Registers a candidate hash under a specific position'
-    #     try:
-    #         tx = self._contract_instance.functions.registerCandidate(
-    #             int(position_id),
-    #             f'0x{candidate_hash}'
-    #         ).build_transaction({
-    #             "gasPrice": self.w3.eth.gas_price,
-    #             "chainId": self.sepolia,
-    #             "from": self._wallet_address,
-    #             "nonce": self._get_nonce()
-    #         })
-    #         return (True, self._send_tx(tx, private_key))
-    #     except Exception as e:
-    #         return (False, str(e))
+    def register_candidate(self, private_key, position_id, candidate_hash):
+        'Admin-only: Registers a candidate hash under a specific position'
+        try:
+            tx = self._contract_instance.functions.registerCandidate(
+                int(position_id),
+                f'0x{candidate_hash}'
+            ).build_transaction({
+                "gasPrice": self.w3.eth.gas_price,
+                "chainId": self.sepolia,
+                "from": self._wallet_address,
+                "nonce": self._get_nonce()
+            })
+            return (True, self._send_tx(tx, private_key))
+        except Exception as e:
+            return (False, str(e))
 
-    # def get_candidates(self, position_id):
-    #     try:
-    #         return [
-    #             candidate.hex() for candidate in
-    #             self._contract_instance.functions.getCandidates(position_id).call()
-    #         ]
-    #     except Exception as e:
-    #         return f"Error fetching candidates: {str(e)}"
+    def get_candidates(self, position_id):
+        try:
+            return [
+                candidate.hex() for candidate in
+                self._contract_instance.functions.getCandidates(position_id).call()
+            ]
+        except Exception as e:
+            return f"Error fetching candidates: {str(e)}"
 
     def print_current_block_timestamp(self):
         timestamp = self._contract_instance.functions.getCurrentTimestamp().call()

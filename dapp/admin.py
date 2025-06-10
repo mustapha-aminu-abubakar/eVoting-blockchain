@@ -75,6 +75,7 @@ def publish():
     candidates = fetch_election_result()
     for candidate in candidates:
         voters = fetch_voters_by_candidate_id(candidate.id)
+        # print(voters)
 
         # Checking vote counts
         if candidate.vote_count != len(voters):

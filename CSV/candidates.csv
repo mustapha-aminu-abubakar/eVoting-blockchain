@@ -1,7 +1,7 @@
-"id","name", "position_id"
-07,"John Doe", 1
-08,"Mariline Monroe", 2
-09,"Taylor Swift", 3
-10,"Elon Musk", 1
-11,"Donald Trump", 2
-12,"Great Gatsby", 3
+id,name, position_id
+07,John Doe, 1
+08,Mariline Monroe, 2
+09,Taylor Swift, 3
+10,Elon Musk, 1
+11,Donald Trump, 2
+12,Great Gatsby, 3

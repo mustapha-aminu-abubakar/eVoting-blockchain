@@ -6,17 +6,38 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
+from web3 import Web3
 from .cryptography import encrypt_object
+from .ethereum import Blockchain
+from .db_operations import fetch_admin_wallet_address, fetch_contract_address
 
+load_dotenv()
+ADMIN_PRIVATE_KEY = os.getenv("ADMIN_PRIVATE_KEY")
 
 def init_candidates(path, db, Candidate):
+    blockchain = Blockchain(
+        fetch_admin_wallet_address(),
+        fetch_contract_address()
+    )
     with open(path) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=",")
         next(csv_reader)
 
         for row in csv_reader:
-            db.session.add(Candidate(id=row[0], name=row[1], position_id=row[2]))
+            _, msg = blockchain.register_candidate(
+                ADMIN_PRIVATE_KEY, 
+                row[2], 
+                Web3.keccak(f'{row[1]}-{row[2]}').hex()
+            )
+            print(f"Candidate {row[1]} registration status: {msg}")
+            db.session.add(Candidate(
+                id=row[0], 
+                name=row[1], 
+                position_id=row[2],
+                candidate_hash=Web3.keccak(f'{row[1]}-{row[2]}').hex())
+            )
         db.session.commit()
 
 
@@ -56,7 +77,7 @@ database = SQLAlchemy()
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain30.sqlite"
+    DB_NAME = "offchain32.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"

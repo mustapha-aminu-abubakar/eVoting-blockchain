@@ -240,6 +240,16 @@ def delete_OTP(otp):
     database.session.delete(otp)
     database.session.commit()
 
+def update_voter_wallet_by_username(username_hash, new_wallet_address, new_encrypted_private_key):
+    voter = Voter.query.filter_by(username_hash=username_hash).first()
+    try:
+        voter.wallet_address = new_wallet_address
+        voter.private_key_encrypted = new_encrypted_private_key
+        database.session.commit()
+        return True, "Wallet info updated successfully"
+    except Exception as e:
+        database.session.rollback()
+        return False, str(e)
 
 # Publish
 

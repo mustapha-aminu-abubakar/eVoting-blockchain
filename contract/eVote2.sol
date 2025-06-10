@@ -16,6 +16,12 @@ contract EVoting {
         _;
     }
 
+    // ✅ NEW: Track whether results have been published
+    bool public resultsPublished = false;
+
+    // ✅ NEW: Emit when results are published
+    event ResultsPublished(uint timestamp);
+
     // Candidate registration per position
     mapping(uint => bytes32[]) public positionCandidates;
 
@@ -86,5 +92,14 @@ contract EVoting {
 
     function getCurrentTimestamp() public view returns (uint) {
         return block.timestamp;
+    }
+
+    // ✅ NEW: Finalizes the results on-chain
+    function publishResults() public onlyAdmin {
+        require(block.timestamp > endVotingTime, "Voting still ongoing");
+        require(!resultsPublished, "Already published");
+
+        resultsPublished = true;
+        emit ResultsPublished(block.timestamp);
     }
 }
