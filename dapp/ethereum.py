@@ -7,6 +7,8 @@ import pytz
 from web3 import Web3
 from dotenv import load_dotenv
 from .credentials import WEB3_PROVIDER_URL
+from .db_operations import get_offchain_results
+from .models import Candidate
 
 load_dotenv()
 ADMIN_PRIVATE_KEY = os.getenv("ADMIN_PRIVATE_KEY")
@@ -160,7 +162,7 @@ class Blockchain:
             'nonce': self._get_nonce(),
             'chainId': self.sepolia,
             'maxFeePerGas': self.w3.eth.gas_price,
-            'maxPriorityFeePerGas': self.w3.to_wei(0.00005, 'gwei'),
+            'maxPriorityFeePerGas': self.w3.eth.gas_price // 2,
             'type': 2  # EIP-1559 transaction type
         }
         # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
@@ -170,5 +172,34 @@ class Blockchain:
             return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
         except Exception as e:
             return (False, str(e))
-
         
+    def get_onchain_results(self):
+        results = {}
+        for candidate in Candidate.query.all():
+            candidate_hash = candidate.candidate_hash  # assuming you stored the hash
+            count = self._contract_instance.functions.getVoteCount(candidate_hash).call()
+            results[candidate.id] = count
+        return results
+    
+    def publish(self):
+        offchain = get_offchain_results()
+        onchain = self.get_onchain_results()
+
+        for cid in offchain:
+            if offchain[cid] != onchain.get(cid, 0):
+                raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
+
+        # If matched, finalize on-chain
+        tx = self._contract_instance.functions.publishResults().build_transaction({
+            "from": self.w3.eth.default_account,
+            "nonce": self._get_nonce(),
+            "chainId": self.sepolia,
+            "gas": 200000,
+            "maxFeePerGas": self.w3.eth.gas_price,
+            "maxPriorityFeePerGas": self.w3.eth.gas_price // 2
+        })
+
+        try:
+            return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
+        except Exception as e:
+            return (False, str(e))

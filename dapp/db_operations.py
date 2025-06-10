@@ -116,6 +116,13 @@ def fetch_candidate_by_position_id(position_id):
         position_id=position_id
     ).all()
     
+def get_offchain_results():
+    results = {}
+    for candidate in Candidate.query.all():
+        vote_count = len(candidate.votes)  # using backref or explicit query
+        results[candidate.id] = vote_count
+    return results
+    
 def count_votes_by_voter(voter_id):
     return Vote.query.filter_by(voter_id=voter_id).count()
 

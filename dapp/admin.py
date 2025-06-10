@@ -58,50 +58,67 @@ def admin_panel():
     )
 
 
+# @admin.route('/publish')
+# @login_required
+# def publish():
+#     'Publish / Rollback election result'
+
+#     # Access deny for other
+#     if not is_admin(current_user):
+#         return redirect(url_for('auth.index'))
+
+#     blockchain = Blockchain(
+#         fetch_admin_wallet_address(),
+#         fetch_contract_address()
+#     )
+
+#     candidates = fetch_election_result()
+#     for candidate in candidates:
+#         voters = fetch_voters_by_candidate_id(candidate.id)
+#         # print(voters)
+
+#         # Checking vote counts
+#         if candidate.vote_count != len(voters):
+#             flash(f'Results tampered for {candidate.name}')
+#             return render_template('error.html', error_msg='Vote count mismatch')
+
+#         # Get the hash from the blokchain
+#         voteHash_from_blockchain = blockchain.get_hash_by_candidate_hash(
+#             sha256_hash(candidate.username)
+#         )
+
+#         # Validate the computed hash and bash from blockchain
+#         if not validate_result_hash(voters, voteHash_from_blockchain):
+#             flash(f'Results tampered for {candidate.name}')
+#             return render_template('error.html', error_msg='Voting hash mismatch')
+
+#     election = publish_result()
+
+#     # Notify current status
+#     if election.status == ElectionStatus.PUBLIC:
+#         flash('Election result is now public')
+#     else:
+#         flash('Election result is now private')
+
+#     return redirect(url_for('admin.admin_panel'))
+
 @admin.route('/publish')
 @login_required
-def publish():
-    'Publish / Rollback election result'
-
-    # Access deny for other
+def publish_results():
     if not is_admin(current_user):
         return redirect(url_for('auth.index'))
 
-    blockchain = Blockchain(
-        fetch_admin_wallet_address(),
-        fetch_contract_address()
-    )
-
-    candidates = fetch_election_result()
-    for candidate in candidates:
-        voters = fetch_voters_by_candidate_id(candidate.id)
-        # print(voters)
-
-        # Checking vote counts
-        if candidate.vote_count != len(voters):
-            flash(f'Results tampered for {candidate.name}')
-            return render_template('error.html', error_msg='Vote count mismatch')
-
-        # Get the hash from the blokchain
-        voteHash_from_blockchain = blockchain.get_hash_by_candidate_hash(
-            sha256_hash(candidate.username)
+    try:
+        blockchain = Blockchain(
+            fetch_admin_wallet_address(),
+            fetch_contract_address()
         )
+        _, msg = blockchain.publish()
+        flash(f"Results published. Tx: {msg}")
+    except Exception as e:
+        flash(str(e), 'error')
 
-        # Validate the computed hash and bash from blockchain
-        if not validate_result_hash(voters, voteHash_from_blockchain):
-            flash(f'Results tampered for {candidate.name}')
-            return render_template('error.html', error_msg='Voting hash mismatch')
-
-    election = publish_result()
-
-    # Notify current status
-    if election.status == ElectionStatus.PUBLIC:
-        flash('Election result is now public')
-    else:
-        flash('Election result is now private')
-
-    return redirect(url_for('admin.admin_panel'))
-
+    return redirect(url_for('admin.dashboard'))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required
