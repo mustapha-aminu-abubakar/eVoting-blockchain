@@ -86,7 +86,11 @@ class Blockchain:
             return (False, str(e))
 
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
-        print(f''' [vote] Building transaction...
+        print(f''' 
+              [vote] Building transaction...
+              Voter Hash: {voter_hash}
+              Candidate Hash: {candidate_hash}
+              Position ID: {position_id}
               ''')
         try:
             tx = self._contract_instance.functions.vote(
@@ -152,7 +156,7 @@ class Blockchain:
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
-        print(tx_receipt['transactionHash'].hex())
+        print(f"{bool(tx_receipt['status'])} {tx_receipt['logs']}")
         return tx_receipt['transactionHash'].hex()
 
     def fund_wallet(self, to_address):
@@ -181,7 +185,7 @@ class Blockchain:
             candidate_hash_bytes32 = Web3.to_bytes(hexstr=candidate_hash)
             count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
             results[candidate.id] = count
-            # print(f"Candidate {candidate.name} ({candidate.id}) has {count} votes on-chain.")
+            print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
         print(results)
         return results
     
