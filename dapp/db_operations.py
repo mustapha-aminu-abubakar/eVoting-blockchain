@@ -1,4 +1,4 @@
-from . import database
+from .db import database
 from .models import Candidate, Election, Otp, Vote, Voter, Position
 from .role import AccountStatus, UserRole
 
@@ -199,6 +199,7 @@ def add_new_vote_record(voter, candidate, vote_hash):
     # Check if voter has already voted for this position
     if Vote.query.filter_by(
         voter_id=voter.id,
+        candidate_id=candidate.id,
         position_id=candidate.position_id,
         vote_hash=vote_hash
     ).first():
@@ -208,7 +209,8 @@ def add_new_vote_record(voter, candidate, vote_hash):
     new_vote = Vote(
         voter_id=voter.id,
         candidate_id=candidate.id,
-        position_id=candidate.position_id
+        position_id=candidate.position_id,
+        vote_hash=vote_hash
     )
 
     candidate.vote_count += 1

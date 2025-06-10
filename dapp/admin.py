@@ -118,7 +118,7 @@ def publish_results():
     except Exception as e:
         flash(str(e), 'error')
 
-    return redirect(url_for('admin.dashboard'))
+    return redirect(url_for('admin.admin_panel'))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required

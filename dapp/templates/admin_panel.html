@@ -35,7 +35,7 @@
 <div class="container">
     <h2>
         Candidates voting status
-        <a href="{{ url_for('admin.publish') }}">
+        <a href="{{ url_for('admin.publish_results') }}">
             <button class='btn btn-primary pull-right' onclick="return confirm('Are you sure?');">
                 {{ 'Rollback' if election_status else 'Publish result' }}
             </button>

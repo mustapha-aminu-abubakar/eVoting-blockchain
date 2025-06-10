@@ -11,6 +11,8 @@ from werkzeug.security import generate_password_hash
 from web3 import Web3
 from .cryptography import encrypt_object
 from .ethereum import Blockchain
+from .models import Candidate, Position, Voter, Election
+from .db import database
 from .db_operations import fetch_admin_wallet_address, fetch_contract_address
 
 load_dotenv()
@@ -29,14 +31,14 @@ def init_candidates(path, db, Candidate):
             _, msg = blockchain.register_candidate(
                 ADMIN_PRIVATE_KEY, 
                 row[2], 
-                Web3.keccak(f'{row[1]}-{row[2]}').hex()
+                Web3.keccak(text=f'{row[1]}-{row[2]}').hex()
             )
             print(f"Candidate {row[1]} registration status: {msg}")
             db.session.add(Candidate(
                 id=row[0], 
                 name=row[1], 
                 position_id=row[2],
-                candidate_hash=Web3.keccak(f'{row[1]}-{row[2]}').hex())
+                candidate_hash=Web3.keccak(text=f'{row[1]}-{row[2]}').hex())
             )
         db.session.commit()
 
@@ -52,16 +54,16 @@ def init_positions(path, db, Position):
 
 
 def setup_admin(path, db, Users, Election):
+    print("Setting up admin user...")
     with open(path) as json_file:
         admin_user_details = json.loads(json_file.read())
         db.session.add(
             Users(
-                username_hash=hashlib.sha256(
-                    bytes(admin_user_details["username"], "UTF-8")
-                ).hexdigest(),
-                password=generate_password_hash(
-                    admin_user_details["passwd"]
-                ),
+                # username_hash=hashlib.sha256(
+                #     bytes(admin_user_details["username"], "UTF-8")
+                # ).hexdigest(),
+                username_hash = Web3.keccak(text=admin_user_details["username"]).hex(),
+                password=generate_password_hash(admin_user_details["passwd"]), 
                 wallet_address=admin_user_details["wallet"],
                 voter_status=False,
             )
@@ -72,12 +74,9 @@ def setup_admin(path, db, Users, Election):
         db.session.commit()
 
 
-database = SQLAlchemy()
-
-
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain32.sqlite"
+    DB_NAME = "offchain47.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
@@ -97,7 +96,7 @@ def create_app():
         database.create_all()
 
         if app.config["EPOCH"]:
-            print("Creating database and adding admin user...")
+            print("Creating database")
             setup_admin(ADMIN_DIR, database, models.Voter, models.Election)
             init_candidates(
                 CANDIDATES_DIR,

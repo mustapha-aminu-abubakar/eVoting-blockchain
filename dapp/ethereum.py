@@ -86,12 +86,13 @@ class Blockchain:
             return (False, str(e))
 
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
-        print(" [vote] Building transaction...")
+        print(f''' [vote] Building transaction...
+              ''')
         try:
             tx = self._contract_instance.functions.vote(
                 int(position_id),
-                f'0x{voter_hash}',
-                f'0x{candidate_hash}'
+                Web3.to_bytes(hexstr=voter_hash),
+                Web3.to_bytes(hexstr=candidate_hash)
             ).build_transaction({
                 "gasPrice": self.w3.eth.gas_price,
                 "gas": 2000000,
@@ -103,22 +104,22 @@ class Blockchain:
         except Exception as e:
             return (False, str(e))
 
-    def get_votes(self, position_id, candidate_hash):
-        'Returns number of votes a candidate has in a given position'
-        try:
-            return self._contract_instance.functions.getVotes(
-                int(position_id),
-                f'0x{candidate_hash}'
-            ).call()
-        except Exception as e:
-            return f"Error fetching votes: {str(e)}"
+    # def get_votes(self, position_id, candidate_hash):
+    #     'Returns number of votes a candidate has in a given position'
+    #     try:
+    #         return self._contract_instance.functions.getVotes(
+    #             int(position_id),
+    #             f'0x{candidate_hash}'
+    #         ).call()
+    #     except Exception as e:
+    #         return f"Error fetching votes: {str(e)}"
 
     def register_candidate(self, private_key, position_id, candidate_hash):
         'Admin-only: Registers a candidate hash under a specific position'
         try:
             tx = self._contract_instance.functions.registerCandidate(
                 int(position_id),
-                f'0x{candidate_hash}'
+                Web3.to_bytes(hexstr=candidate_hash)
             ).build_transaction({
                 "gasPrice": self.w3.eth.gas_price,
                 "chainId": self.sepolia,
@@ -177,8 +178,11 @@ class Blockchain:
         results = {}
         for candidate in Candidate.query.all():
             candidate_hash = candidate.candidate_hash  # assuming you stored the hash
-            count = self._contract_instance.functions.getVoteCount(candidate_hash).call()
+            candidate_hash_bytes32 = Web3.to_bytes(hexstr=candidate_hash)
+            count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
             results[candidate.id] = count
+            # print(f"Candidate {candidate.name} ({candidate.id}) has {count} votes on-chain.")
+        print(results)
         return results
     
     def publish(self):

@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 
-from . import database
+from dapp.db import database
 
 
 class Otp(database.Model):

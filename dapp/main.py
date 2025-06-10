@@ -109,10 +109,10 @@ def cast_vote(candidate_id):
     # Get candidate and voter
     selected_candidate = fetch_candidate_by_id(candidate_id)
     voter = fetch_voter_by_id(current_user.id)
-    vote_hash = Web3.keccak(f'{voter.id}-{selected_candidate.id}').hex()
+    vote_hash = Web3.keccak(text=f'{voter.id}-{selected_candidate.id}').hex()
     
     # Check if user has already voted a candidate for this position
-    status, msg = add_new_vote_record(voter, selected_candidate)
+    status, msg = add_new_vote_record(voter, selected_candidate, vote_hash)
     if not status:
         flash(msg)
         return redirect(url_for('main.positions'))
@@ -136,7 +136,7 @@ def cast_vote(candidate_id):
     status, tx_msg = blockchain.vote(
         private_key, 
         selected_candidate.position_id, 
-        vote_hash, 
+        voter.username_hash, 
         selected_candidate.candidate_hash
         )
 
