@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
+from web3 import Web3
 
 from .credentials import EMAIL_SERVICE
 from .db_operations import (add_new_voter_signup, delete_OTP,
@@ -84,7 +85,7 @@ def signin_post():
     username = request.form.get('username').strip()
     password = request.form.get('pwd').strip()
     # Username HASH
-    username_hash = sha256_hash(username)
+    username_hash = Web3.keccak(username).hex()
 
     # Validate the inputs
     valid, msg = validate_signin(username, password)

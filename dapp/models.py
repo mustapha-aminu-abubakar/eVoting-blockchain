@@ -214,6 +214,12 @@ class Vote(database.Model):
         database.ForeignKey('candidate.id'),
         nullable=False
     )
+    
+    vote_hash = database.Column(
+        database.String(66),  # 0x-prefixed hex string of 32 bytes
+        unique=True,
+        nullable=False
+    )
 
     __table_args__ = (
         database.UniqueConstraint('voter_id', 'position_id', name='unique_vote_per_position'),
@@ -229,5 +235,6 @@ class Vote(database.Model):
             voter_id: {self.voter_id}
             position_id: {self.position_id}
             candidate_id: {self.candidate_id}
+            vote_hash: {self.vote_hash} 
         )
         '''

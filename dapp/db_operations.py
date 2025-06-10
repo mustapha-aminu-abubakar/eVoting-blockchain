@@ -188,11 +188,12 @@ def has_voted_for_position(voter_id, position_id):
 #     candidate.vote_count += 1
 #     database.session.commit()
 
-def add_new_vote_record(voter, candidate):
+def add_new_vote_record(voter, candidate, vote_hash):
     # Check if voter has already voted for this position
     if Vote.query.filter_by(
         voter_id=voter.id,
-        position_id=candidate.position_id
+        position_id=candidate.position_id,
+        vote_hash=vote_hash
     ).first():
         return False, "Voter has already voted for this position."
 

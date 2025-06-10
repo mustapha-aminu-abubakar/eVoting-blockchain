@@ -1,5 +1,6 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from web3 import Web3
 
 from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_candidate_by_id,
@@ -108,6 +109,7 @@ def cast_vote(candidate_id):
     # Get candidate and voter
     selected_candidate = fetch_candidate_by_id(candidate_id)
     voter = fetch_voter_by_id(current_user.id)
+    vote_hash = Web3.keccak(f'{voter.id}-{selected_candidate.id}').hex()
     
     # Check if user has already voted a candidate for this position
     status, msg = add_new_vote_record(voter, selected_candidate)
@@ -116,26 +118,31 @@ def cast_vote(candidate_id):
         return redirect(url_for('main.positions'))
 
     # Generate hash
-    candidate_hash, vote_hash = build_vote_cast_hash(
-        selected_candidate,
-        voter,
-        fetch_voters_by_candidate_id(selected_candidate.id)
-    )
+    # candidate_hash, vote_hash = build_vote_cast_hash(
+    #     selected_candidate,
+    #     voter,
+    #     fetch_voters_by_candidate_id(selected_candidate.id)
+    # )
 
     print(f'''
         voter: {voter}
-        candidate hash: {candidate_hash}
+        candidate hash: {selected_candidate.candidate_hash}
         vote_hash: {vote_hash}
         private_key: {private_key}
     ''')
 
     # Sending transaction for vote cast
     blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
-    status, tx_msg = blockchain.vote(private_key, selected_candidate.position_id, vote_hash, candidate_hash)
+    status, tx_msg = blockchain.vote(
+        private_key, 
+        selected_candidate.position_id, 
+        vote_hash, 
+        selected_candidate.candidate_hash
+        )
 
     if status:
         flash(f'Transaction confirmed: {tx_msg}')
-        add_new_vote_record(voter, selected_candidate)
+        add_new_vote_record(voter, selected_candidate, vote_hash)
     else:
         flash(f'Transaction failed: {tx_msg}')
 
@@ -149,48 +156,48 @@ def cast_vote(candidate_id):
 
 
 
-@main.route('/cast_vote/<int:candidate_id>/confirm', methods=['POST'])
-@login_required
-def cast_vote_confirm(candidate_id):
-    '''
-    Confirm the vote
-    Take the private key of the voter to sign to transaction
-    '''
+# @main.route('/cast_vote/<int:candidate_id>/confirm', methods=['POST'])
+# @login_required
+# def cast_vote_confirm(candidate_id):
+#     '''
+#     Confirm the vote
+#     Take the private key of the voter to sign to transaction
+#     '''
 
-    # Access deny for ADMIN
-    if is_admin(current_user):
-        return redirect(url_for('auth.index'))
+#     # Access deny for ADMIN
+#     if is_admin(current_user):
+#         return redirect(url_for('auth.index'))
 
-    # Voter private key
-    private_key = request.form.get('private_key').strip()
+#     # Voter private key
+#     private_key = request.form.get('private_key').strip()
 
-    # Get candidate and voter
-    selected_candidate = fetch_candidate_by_id(candidate_id)
-    voter = fetch_voter_by_id(current_user.id)
+#     # Get candidate and voter
+#     selected_candidate = fetch_candidate_by_id(candidate_id)
+#     voter = fetch_voter_by_id(current_user.id)
 
-    # Generate hash
-    candidate_hash, vote_hash = build_vote_cast_hash(
-        selected_candidate,
-        voter,
-        fetch_voters_by_candidate_id(selected_candidate.id)
-    )
+#     # Generate hash
+#     candidate_hash, vote_hash = build_vote_cast_hash(
+#         selected_candidate,
+#         voter,
+#         fetch_voters_by_candidate_id(selected_candidate.id)
+#     )
 
-    print(f'''
-        candidate hash: {candidate_hash}
-        vote_hash: {vote_hash}
-    ''')
+#     print(f'''
+#         candidate hash: {candidate_hash}
+#         vote_hash: {vote_hash}
+#     ''')
 
-    # Sending transaction for vote cast
-    blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
-    status, tx_msg = blockchain.vote(private_key, candidate_hash, vote_hash)
+#     # Sending transaction for vote cast
+#     blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
+#     status, tx_msg = blockchain.vote(private_key, candidate_hash, vote_hash)
 
-    if status:
-        flash(f'Transaction confirmed: {tx_msg}')
-        add_new_vote_record(voter, selected_candidate)
-    else:
-        flash(f'Transaction failed: {tx_msg}')
+#     if status:
+#         flash(f'Transaction confirmed: {tx_msg}')
+#         add_new_vote_record(voter, selected_candidate)
+#     else:
+#         flash(f'Transaction failed: {tx_msg}')
 
-    return redirect(url_for('main.candidates'))
+#     return redirect(url_for('main.candidates'))
 
 
 @main.route('/result')
