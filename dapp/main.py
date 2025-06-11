@@ -119,7 +119,7 @@ def cast_vote(candidate_id):
         voter.username_hash, 
         selected_candidate.candidate_hash
         )
-    
+    print(status, tx_msg)
     if status:
     # Check if user has already voted a candidate for this position
         flash(f'Vote successful: {tx_msg}')
@@ -134,6 +134,7 @@ def cast_vote(candidate_id):
         return redirect(url_for('main.positions'))
     else:
         flash(f'Vote failed: {tx_msg}')
+        return redirect(url_for('main.cast_vote', candidate_id=candidate_id))
 
 
 

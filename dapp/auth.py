@@ -234,7 +234,7 @@ def verify_otp_post(username_hash_hex):
     # if check_password_hash(otp.otp, user_otp):
     print(f'OTP: {otp}')
     print(f'User OTP: {user_otp}')
-    if check_password_hash(otp, user_otp):   
+    if check_password_hash(otp.otp, user_otp):   
         delete_OTP(otp)
         fund_new_user_wallet(username_hash_hex)
         flash('Voter registration complete')

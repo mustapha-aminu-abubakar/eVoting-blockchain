@@ -44,12 +44,12 @@ class Blockchain:
         utc_dt = local_dt.astimezone(pytz.utc)
         return int(utc_dt.timestamp())
     
-    def generate_candidate_hash(candidate_id, name, position_id):
-        """
-        Generates a keccak256 hash for a candidate using their id, name, and position.
-        """
-        input_string = f"{candidate_id}:{name}:{position_id}"
-        return Web3.keccak(text=input_string).hex()
+    # def generate_candidate_hash(candidate_id, name, position_id):
+    #     """
+    #     Generates a keccak256 hash for a candidate using their id, name, and position.
+    #     """
+    #     input_string = f"{candidate_id}:{name}:{position_id}"
+    #     return Web3.keccak(text=input_string).hex()
 
     def set_voting_time(self, private_key, start_unix_time, end_unix_time):
         print(" [set_voting_time] Building transaction...")
@@ -67,9 +67,10 @@ class Blockchain:
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
             })
-            return (True, self._send_tx(tx, private_key))
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
 
     def extend_time(self, private_key, new_end_time):
         try:
@@ -81,9 +82,10 @@ class Blockchain:
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
             })
-            return (True, self._send_tx(tx, private_key))
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
 
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
         print(f''' 
@@ -104,9 +106,10 @@ class Blockchain:
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
             })
-            return (True, self._send_tx(tx, private_key))
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
 
     # def get_votes(self, position_id, candidate_hash):
     #     'Returns number of votes a candidate has in a given position'
@@ -130,9 +133,10 @@ class Blockchain:
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
             })
-            return (True, self._send_tx(tx, private_key))
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
 
     def get_candidates(self, position_id):
         try:
@@ -157,26 +161,28 @@ class Blockchain:
         # print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
         print(f"{bool(tx_receipt['status'])} gasused: {tx_receipt['gasUsed']}")
-        return tx_receipt['transactionHash'].hex()
+        # return tx_receipt['transactionHash'].hex()
+        return tx_receipt
 
     def fund_wallet(self, to_address):
-        tx = {
-            'to': to_address,
-            'value': self.w3.to_wei(0.002, 'ether'),
-            'gas': 21000,
-            'nonce': self._get_nonce(),
-            'chainId': self.sepolia,
-            'maxFeePerGas': int(self.w3.eth.gas_price * 1.2),
-            'maxPriorityFeePerGas': self.w3.eth.gas_price // 2,
-            'type': 2  # EIP-1559 transaction type
-        }
-        # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
-        # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")    
-
         try:
-            return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
+            tx = {
+                'to': to_address,
+                'value': self.w3.to_wei(0.002, 'ether'),
+                'gas': 21000,
+                'nonce': self._get_nonce(),
+                'chainId': self.sepolia,
+                'maxFeePerGas': int(self.w3.eth.gas_price * 1.2),
+                'maxPriorityFeePerGas': self.w3.eth.gas_price // 2,
+                'type': 2  # EIP-1559 transaction type
+            }
+            # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
+            # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")    
+
+            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
         
     def get_onchain_results(self):
         results = {}
@@ -190,27 +196,28 @@ class Blockchain:
         return results
     
     def publish(self):
-        offchain = get_offchain_results()
-        onchain = self.get_onchain_results()
-
-        for cid in offchain:
-            if offchain[cid] != onchain.get(cid, 0):
-                raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
-
-        # If matched, finalize on-chain
-        tx = self._contract_instance.functions.publishResults().build_transaction({
-            "from": self.w3.eth.default_account,
-            "nonce": self._get_nonce(),
-            "chainId": self.sepolia,
-            "gas": 200000,
-            "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
-            "maxPriorityFeePerGas": self.w3.eth.gas_price // 2
-        })
-
         try:
-            return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
+            offchain = get_offchain_results()
+            onchain = self.get_onchain_results()
+
+            for cid in offchain:
+                if offchain[cid] != onchain.get(cid, 0):
+                    raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
+
+            # If matched, finalize on-chain
+            tx = self._contract_instance.functions.publishResults().build_transaction({
+                "from": self.w3.eth.default_account,
+                "nonce": self._get_nonce(),
+                "chainId": self.sepolia,
+                "gas": 200000,
+                "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                "maxPriorityFeePerGas": self.w3.eth.gas_price // 2
+            })
+
+            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (False, str(e))
+            return (bool(tx_receipt['status']), str(e))
     
     def get_voting_time(self):
         try:
