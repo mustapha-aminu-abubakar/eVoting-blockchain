@@ -124,7 +124,7 @@ def cast_vote(candidate_id):
     # Check if user has already voted a candidate for this position
         flash(f'Vote successful: {tx_msg}')
         print(f'''
-        voter: {voter}
+        voter hash: {voter.username_hash}
         candidate hash: {selected_candidate.candidate_hash}
         vote_hash: {vote_hash}
         private_key: {private_key}

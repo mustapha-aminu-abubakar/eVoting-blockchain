@@ -49,15 +49,15 @@ def fetch_election_result_restricted():
     return Candidate.query.order_by(Candidate.vote_count.desc()).all()
 
 
-def fetch_voter_by_username_hash(username_hash):
+def fetch_voter_by_username_hash_hex(username_hash_hex):
     return Voter.query.filter_by(
-        username_hash=username_hash
+        username_hash_hex=username_hash_hex
     ).first()
 
 
-def fetch_OTP_by_username_hash(username_hash):
+def fetch_OTP_by_username_hash_hex(username_hash_hex):
     return Otp.query.filter_by(
-        username_hash=username_hash
+        username_hash_hex=username_hash_hex
     ).first()
 
 
@@ -151,9 +151,9 @@ def ban_voter_by_id(voter_id):
 # Check section
 
 
-def is_unverified_account(username_hash):
+def is_unverified_account(username_hash_hex):
     if Otp.query.filter_by(
-        username_hash=username_hash
+        username_hash_hex=username_hash_hex
     ).first():
         return True
     return False
@@ -222,6 +222,7 @@ def add_new_vote_record(voter, candidate, vote_hash):
 
 def add_new_voter_signup(
         username_hash,
+        username_hash_hex,
         password_hash,
         email_encrypted,
         wallet_address,
@@ -231,6 +232,7 @@ def add_new_voter_signup(
     database.session.add(
         Voter(
             username_hash=username_hash,
+            username_hash_hex=username_hash_hex,
             password=password_hash,
             email_encrypted=email_encrypted,
             wallet_address=wallet_address,
@@ -239,7 +241,7 @@ def add_new_voter_signup(
     )
     database.session.add(
         Otp(
-            username_hash=username_hash,
+            username_hash_hex=username_hash_hex,
             otp=otp
         )
     )
@@ -250,8 +252,8 @@ def delete_OTP(otp):
     database.session.delete(otp)
     database.session.commit()
 
-def update_voter_wallet_by_username(username_hash, new_wallet_address, new_encrypted_private_key):
-    voter = Voter.query.filter_by(username_hash=username_hash).first()
+def update_voter_wallet_by_username(username_hash_hex, new_wallet_address, new_encrypted_private_key):
+    voter = Voter.query.filter_by(username_hash_hex=username_hash_hex).first()
     try:
         voter.wallet_address = new_wallet_address
         voter.private_key_encrypted = new_encrypted_private_key

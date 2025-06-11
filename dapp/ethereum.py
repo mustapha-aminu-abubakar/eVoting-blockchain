@@ -36,7 +36,7 @@ class Blockchain:
             self._ABI = json.loads(ABI_file.read())
 
     def _get_nonce(self):
-        return self.w3.eth.get_transaction_count(self._wallet_address)
+        return self.w3.eth.get_transaction_count(self._wallet_address, 'pending')
 
     def local_to_utc_timestamp(self, local_timestamp: int) -> int:
         local_tz = get_localzone()
@@ -62,7 +62,7 @@ class Blockchain:
                 start_utc,
                 end_utc
             ).build_transaction({
-                "gasPrice": self.w3.eth.gas_price,
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
@@ -76,7 +76,7 @@ class Blockchain:
             tx = self._contract_instance.functions.extendVotingTime(
                 new_end_time
             ).build_transaction({
-                "gasPrice": self.w3.eth.gas_price,
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
@@ -95,10 +95,10 @@ class Blockchain:
         try:
             tx = self._contract_instance.functions.vote(
                 int(position_id),
-                Web3.to_bytes(hexstr=voter_hash),
-                Web3.to_bytes(hexstr=candidate_hash)
+                voter_hash,
+                candidate_hash
             ).build_transaction({
-                "gasPrice": self.w3.eth.gas_price,
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "gas": 2000000,
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
@@ -123,9 +123,9 @@ class Blockchain:
         try:
             tx = self._contract_instance.functions.registerCandidate(
                 int(position_id),
-                Web3.to_bytes(hexstr=candidate_hash)
+                candidate_hash
             ).build_transaction({
-                "gasPrice": self.w3.eth.gas_price,
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "chainId": self.sepolia,
                 "from": self._wallet_address,
                 "nonce": self._get_nonce()
@@ -156,7 +156,7 @@ class Blockchain:
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         # print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
-        print(f"{bool(tx_receipt['status'])}")
+        print(f"{bool(tx_receipt['status'])} gasused: {tx_receipt['gasUsed']}")
         return tx_receipt['transactionHash'].hex()
 
     def fund_wallet(self, to_address):
@@ -166,7 +166,7 @@ class Blockchain:
             'gas': 21000,
             'nonce': self._get_nonce(),
             'chainId': self.sepolia,
-            'maxFeePerGas': self.w3.eth.gas_price,
+            'maxFeePerGas': int(self.w3.eth.gas_price * 1.2),
             'maxPriorityFeePerGas': self.w3.eth.gas_price // 2,
             'type': 2  # EIP-1559 transaction type
         }
@@ -182,7 +182,7 @@ class Blockchain:
         results = {}
         for candidate in Candidate.query.all():
             candidate_hash = candidate.candidate_hash  # assuming you stored the hash
-            candidate_hash_bytes32 = Web3.to_bytes(hexstr=candidate_hash)
+            candidate_hash_bytes32 = candidate_hash
             count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
             results[candidate.id] = count
             print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
@@ -203,7 +203,7 @@ class Blockchain:
             "nonce": self._get_nonce(),
             "chainId": self.sepolia,
             "gas": 200000,
-            "maxFeePerGas": self.w3.eth.gas_price,
+            "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
             "maxPriorityFeePerGas": self.w3.eth.gas_price // 2
         })
 

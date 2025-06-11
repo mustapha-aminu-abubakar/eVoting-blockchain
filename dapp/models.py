@@ -9,7 +9,7 @@ class Otp(database.Model):
         primary_key=True
     )
 
-    username_hash = database.Column(
+    username_hash_hex = database.Column(
         database.String(64),
         unique=True,
         nullable=False
@@ -24,7 +24,7 @@ class Otp(database.Model):
         return f'''
         OTPs (
             id: {self.id}
-            username_hash: {self.username_hash}
+            username_hash_hex: {self.username_hash_hex}
             otp: {self.otp}
         )
         '''
@@ -38,6 +38,12 @@ class Voter(database.Model, UserMixin):
 
     username_hash = database.Column(
         database.String(64),
+        unique=True,
+        nullable=False
+    )
+    
+    username_hash_hex = database.Column(
+        database.String(66),  
         unique=True,
         nullable=False
     )

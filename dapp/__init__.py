@@ -65,6 +65,7 @@ def setup_admin(path, db, Users, Election):
                 #     bytes(admin_user_details["username"], "UTF-8")
                 # ).hexdigest(),
                 username_hash = Web3.keccak(text=admin_user_details["username"]),
+                username_hash_hex=Web3.keccak(text=admin_user_details["username"]).hex(),
                 password=generate_password_hash(admin_user_details["passwd"]), 
                 wallet_address=admin_user_details["wallet"],
                 voter_status=False,
@@ -78,7 +79,7 @@ def setup_admin(path, db, Users, Election):
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain50.sqlite"
+    DB_NAME = "offchain56.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
