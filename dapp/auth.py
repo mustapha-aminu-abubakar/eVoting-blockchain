@@ -85,7 +85,7 @@ def signin_post():
     username = request.form.get('username').strip()
     password = request.form.get('pwd').strip()
     # Username HASH
-    username_hash = Web3.keccak(text=username).hex()
+    username_hash = Web3.keccak(text=username)
 
     # Validate the inputs
     valid, msg = validate_signin(username, password)
@@ -145,7 +145,7 @@ def signup_post():
     # wallet_address = request.form.get('walletaddr').strip()
     
     # Create hashs
-    username_hash = Web3.keccak(text=username).hex()
+    username_hash = Web3.keccak(text=username)
     password_hash = generate_password_hash(password)
 
     # Validate inputs

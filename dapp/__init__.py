@@ -28,17 +28,19 @@ def init_candidates(path, db, Candidate):
         next(csv_reader)
 
         for row in csv_reader:
+            candidate_hash = Web3.keccak(text=f'{row[1]}-{row[2]}')
             _, msg = blockchain.register_candidate(
                 ADMIN_PRIVATE_KEY, 
                 row[2], 
-                Web3.keccak(text=f'{row[1]}-{row[2]}').hex()
-            )
-            print(f"Candidate {row[1]} registration status: {msg}")
+                candidate_hash
+                )
+            
+            print(f"Candidate {row[1]} registration status: {msg}, candidate_hash: {candidate_hash}")
             db.session.add(Candidate(
                 id=row[0], 
                 name=row[1], 
                 position_id=row[2],
-                candidate_hash=Web3.keccak(text=f'{row[1]}-{row[2]}').hex())
+                candidate_hash=candidate_hash)
             )
         db.session.commit()
 
@@ -62,7 +64,7 @@ def setup_admin(path, db, Users, Election):
                 # username_hash=hashlib.sha256(
                 #     bytes(admin_user_details["username"], "UTF-8")
                 # ).hexdigest(),
-                username_hash = Web3.keccak(text=admin_user_details["username"]).hex(),
+                username_hash = Web3.keccak(text=admin_user_details["username"]),
                 password=generate_password_hash(admin_user_details["passwd"]), 
                 wallet_address=admin_user_details["wallet"],
                 voter_status=False,

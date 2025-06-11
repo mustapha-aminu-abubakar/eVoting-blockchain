@@ -109,28 +109,8 @@ def cast_vote(candidate_id):
     # Get candidate and voter
     selected_candidate = fetch_candidate_by_id(candidate_id)
     voter = fetch_voter_by_id(current_user.id)
-    vote_hash = Web3.keccak(text=f'{voter.id}-{selected_candidate.id}').hex()
+    vote_hash = Web3.keccak(text=f'{voter.id}-{selected_candidate.id}')
     
-    # Check if user has already voted a candidate for this position
-    status, msg = add_new_vote_record(voter, selected_candidate, vote_hash)
-    if not status:
-        flash(msg)
-        return redirect(url_for('main.positions'))
-
-    # Generate hash
-    # candidate_hash, vote_hash = build_vote_cast_hash(
-    #     selected_candidate,
-    #     voter,
-    #     fetch_voters_by_candidate_id(selected_candidate.id)
-    # )
-
-    print(f'''
-        voter: {voter}
-        candidate hash: {selected_candidate.candidate_hash}
-        vote_hash: {vote_hash}
-        private_key: {private_key}
-    ''')
-
     # Sending transaction for vote cast
     blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
     status, tx_msg = blockchain.vote(
@@ -139,20 +119,21 @@ def cast_vote(candidate_id):
         voter.username_hash, 
         selected_candidate.candidate_hash
         )
-
+    
     if status:
-        flash(f'Transaction confirmed: {tx_msg}')
-        add_new_vote_record(voter, selected_candidate, vote_hash)
+    # Check if user has already voted a candidate for this position
+        flash(f'Vote successful: {tx_msg}')
+        print(f'''
+        voter: {voter}
+        candidate hash: {selected_candidate.candidate_hash}
+        vote_hash: {vote_hash}
+        private_key: {private_key}
+        ''')
+        _, msg = add_new_vote_record(voter, selected_candidate, vote_hash)
+        print(f'Offline vote record: {msg}')
+        return redirect(url_for('main.positions'))
     else:
-        flash(f'Transaction failed: {tx_msg}')
-
-
-    # return render_template(
-    #     'candidates_confirm.html',
-    #     selected_candidate=selected_candidate,
-    #     private_key=private_key
-    # )
-    return redirect(url_for('main.positions'))
+        flash(f'Vote failed: {tx_msg}')
 
 
 

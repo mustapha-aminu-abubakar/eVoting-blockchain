@@ -152,11 +152,11 @@ class Blockchain:
         private_key = f'0x{private_key}'
         print(f" Signing Tx...{private_key}")
         signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=private_key)
-        print(" Sending Tx...")
+        # print(" Sending Tx...")
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        print(" Waiting for Tx receipt...")
+        # print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
-        print(f"{bool(tx_receipt['status'])} {tx_receipt['logs']}")
+        print(f"{bool(tx_receipt['status'])}")
         return tx_receipt['transactionHash'].hex()
 
     def fund_wallet(self, to_address):
@@ -209,5 +209,14 @@ class Blockchain:
 
         try:
             return (True, self._send_tx(tx, ADMIN_PRIVATE_KEY))
+        except Exception as e:
+            return (False, str(e))
+    
+    def get_voting_time(self):
+        try:
+            now = self._contract_instance.functions.getCurrentTimestamp().call()
+            start = self._contract_instance.functions.startVotingTime().call()
+            end = self._contract_instance.functions.endVotingTime().call()
+            print (f"Current time: {now}, Start time: {start}, End time: {end}")
         except Exception as e:
             return (False, str(e))
