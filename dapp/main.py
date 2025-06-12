@@ -184,9 +184,12 @@ def cast_vote(candidate_id):
 
 
 @main.route('/result')
-def result():
+def result(results):
     'Show the election result if published'
-
+    return render_template(
+        'result.html',
+        results = results
+    )
     # If not public
     # election = fetch_election()
     # if election.status == ElectionStatus.PRIVATE:
@@ -197,15 +200,12 @@ def result():
     # candidates = fetch_election_result()
     # _, max_vote_owner_id = count_max_vote_owner_id(candidates)
     
-    blockchain = Blockchain(
-        fetch_admin_wallet_address(),
-        fetch_contract_address()
-    )
-    status, _, result = blockchain.publish()
-    if not status:
-        flash('The result has not been released yet')
+    # blockchain = Blockchain(
+    #     fetch_admin_wallet_address(),
+    #     fetch_contract_address()
+    # )
+    # status, _, result = blockchain.publish()
+    # if not status:
+    #     flash('The result has not been released yet')
 
-    return render_template(
-        'result.html',
-        result = result
-    )
+    

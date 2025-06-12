@@ -6,9 +6,10 @@ import pytz
 
 from web3 import Web3
 from dotenv import load_dotenv
+from collections import defaultdict
 from .credentials import WEB3_PROVIDER_URL
 from .db_operations import get_offchain_results
-from .models import Candidate
+from .models import Candidate, Position
 
 load_dotenv()
 ADMIN_PRIVATE_KEY = os.getenv("ADMIN_PRIVATE_KEY")
@@ -218,21 +219,36 @@ class Blockchain:
     def get_onchain_results(self):
         results = {}
         for candidate in Candidate.query.all():
-            candidate_hash = candidate.candidate_hash  # assuming you stored the hash
-            candidate_hash_bytes32 = candidate_hash
+            candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
             count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
             results[candidate.id] = candidate.as_dict() 
             results[candidate.id]['vote_count'] = count
-            # results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
+            results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
             results[candidate.id]['position'] = candidate.position.position
             # print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
-        print(results)
+        # print(results)
         return results
+    
+    
+    def group_candidates_by_position(self):
+        grouped = defaultdict(list)
+        results = self.get_onchain_results()
+
+        for candidate in results.values():
+            grouped[candidate["position"]].append(candidate)
+
+        # Mark winners
+        for position, candidates in grouped.items():
+            max_votes = max(c["vote_count"] for c in candidates)
+            for c in candidates:
+                c["is_winner"] = c["vote_count"] == max_votes
+        print(f"Grouped candidates by position: {grouped}")
+        return dict(grouped) 
     
     def publish(self):
         try:
             # offchain = get_offchain_results()
-            results = self.get_onchain_results()
+            results = self.group_candidates_by_position()
 
             # for cid in offchain:
             #     if offchain[cid] != onchain.get(cid, 0):

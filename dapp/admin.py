@@ -113,12 +113,12 @@ def publish_results():
             fetch_admin_wallet_address(),
             fetch_contract_address()
         )
-        _, msg = blockchain.publish()
-        flash(f"Results published. Tx: {msg}")
+        status, tx_receipt , results = blockchain.publish()
+        flash(f"Results published. Tx: {tx_receipt}")
     except Exception as e:
         flash(str(e), 'error')
 
-    return redirect(url_for('main.result'))
+    return redirect(url_for('main.result', results=results))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required
