@@ -57,17 +57,22 @@ class Blockchain:
         # Return UTC timestamp
         return int(utc_dt.timestamp())
     
+    def to_utc_timestamp(self, dt_str, tz_name):
+        naive = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M")
+        local = pytz.timezone(tz_name).localize(naive)
+        return int(local.astimezone(pytz.utc).timestamp())
+    
 
-    def set_voting_time(self, start_unix_time, end_unix_time, private_key=ADMIN_PRIVATE_KEY):
+    def set_voting_time(self, start_unix_time, end_unix_time, tz, private_key=ADMIN_PRIVATE_KEY):
         print(" [set_voting_time] Building transaction...")
 
-        # start_utc = self.local_to_utc_timestamp(start_unix_time)
-        # end_utc = self.local_to_utc_timestamp(end_unix_time)
+        start_ts_utc = self.to_utc_timestamp(start_unix_time, tz)
+        end_ts_utc = self.to_utc_timestamp(end_unix_time, tz)
 
         try:
             tx = self._contract_instance.functions.setVotingTime(
-                start_unix_time,
-                end_unix_time
+                start_ts_utc,
+                end_ts_utc
             ).build_transaction({
                 "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "chainId": self.sepolia,
