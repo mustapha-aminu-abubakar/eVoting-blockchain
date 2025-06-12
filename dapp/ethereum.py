@@ -221,19 +221,22 @@ class Blockchain:
             candidate_hash = candidate.candidate_hash  # assuming you stored the hash
             candidate_hash_bytes32 = candidate_hash
             count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
-            results[candidate.id] = count
-            print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
+            results[candidate.id] = candidate.as_dict() 
+            results[candidate.id]['vote_count'] = count
+            # results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
+            results[candidate.id]['position'] = candidate.position.position
+            # print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
         print(results)
         return results
     
     def publish(self):
         try:
-            offchain = get_offchain_results()
-            onchain = self.get_onchain_results()
+            # offchain = get_offchain_results()
+            results = self.get_onchain_results()
 
-            for cid in offchain:
-                if offchain[cid] != onchain.get(cid, 0):
-                    raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
+            # for cid in offchain:
+            #     if offchain[cid] != onchain.get(cid, 0):
+            #         raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
 
             # If matched, finalize on-chain
             tx = self._contract_instance.functions.publishResults().build_transaction({
@@ -246,9 +249,9 @@ class Blockchain:
             })
 
             tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
-            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex(), results)
         except Exception as e:
-            return (False, str(e))
+            return (False, str(e), None)
     
     def get_voting_time(self):
         try:

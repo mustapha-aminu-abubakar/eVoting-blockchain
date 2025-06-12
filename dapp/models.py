@@ -153,6 +153,16 @@ class Candidate(database.Model):
             candidate_hash: {self.candidate_hash}
         )
         '''
+    
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'position_id': self.position_id,
+            'name': self.name,
+            'vote_count': self.vote_count,
+            'candidate_status': self.candidate_status,
+            'candidate_hash': self.candidate_hash
+        }
 
 class Position(database.Model):
     id = database.Column(

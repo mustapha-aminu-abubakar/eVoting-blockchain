@@ -8,6 +8,7 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_contract_address, fetch_election,
                             fetch_election_result, fetch_voter_by_id,
                             fetch_voters_by_candidate_id,
+                            fetch_admin_wallet_address,
                             fetch_all_positions,
                             fetch_position_by_id,
                             fetch_candidate_by_position_id,
@@ -187,17 +188,24 @@ def result():
     'Show the election result if published'
 
     # If not public
-    election = fetch_election()
-    if election.status == ElectionStatus.PRIVATE:
-        flash('The result has not been released yet')
-        return redirect(url_for('auth.index'))
+    # election = fetch_election()
+    # if election.status == ElectionStatus.PRIVATE:
+    #     flash('The result has not been released yet')
+    #     return redirect(url_for('auth.index'))
 
     # Find the max vote count and IDs of the winners
-    candidates = fetch_election_result()
-    _, max_vote_owner_id = count_max_vote_owner_id(candidates)
+    # candidates = fetch_election_result()
+    # _, max_vote_owner_id = count_max_vote_owner_id(candidates)
+    
+    blockchain = Blockchain(
+        fetch_admin_wallet_address(),
+        fetch_contract_address()
+    )
+    status, _, result = blockchain.publish()
+    if not status:
+        flash('The result has not been released yet')
 
     return render_template(
         'result.html',
-        candidates=candidates,
-        max_vote_owner_id=max_vote_owner_id
+        result = result
     )
