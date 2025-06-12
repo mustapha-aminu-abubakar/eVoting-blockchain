@@ -38,29 +38,36 @@ class Blockchain:
     def _get_nonce(self):
         return self.w3.eth.get_transaction_count(self._wallet_address, 'pending')
 
-    def local_to_utc_timestamp(self, local_timestamp: int) -> int:
+    def local_to_utc_timestamp(self, _timestamp: str) -> int:
+        # local_tz = get_localzone()
+        # local_dt = datetime.fromtimestamp(local_timestamp).replace(tzinfo=local_tz)
+        # utc_dt = local_dt.astimezone(pytz.utc)
+        # return int(utc_dt.timestamp())
+        # Parse string to naive datetime
+        print(f'Timestamp: {_timestamp}')
+        local_naive_dt = datetime.strptime(_timestamp, "%Y-%m-%dT%H:%M")
+        # Get local timezone
         local_tz = get_localzone()
-        local_dt = datetime.fromtimestamp(local_timestamp).replace(tzinfo=local_tz)
+        # Localize the naive datetime
+        local_dt = local_tz.localize(local_naive_dt)
+        # Convert to UTC
         utc_dt = local_dt.astimezone(pytz.utc)
+        print(f"Local time: {local_dt.isoformat()} UTC time: {utc_dt.isoformat()}")
+        print(f"Local timestamp: {local_dt.timestamp()} UTC timestamp: {utc_dt.timestamp()}")
+        # Return UTC timestamp
         return int(utc_dt.timestamp())
     
-    # def generate_candidate_hash(candidate_id, name, position_id):
-    #     """
-    #     Generates a keccak256 hash for a candidate using their id, name, and position.
-    #     """
-    #     input_string = f"{candidate_id}:{name}:{position_id}"
-    #     return Web3.keccak(text=input_string).hex()
 
-    def set_voting_time(self, private_key, start_unix_time, end_unix_time):
+    def set_voting_time(self, start_unix_time, end_unix_time, private_key=ADMIN_PRIVATE_KEY):
         print(" [set_voting_time] Building transaction...")
 
-        start_utc = self.local_to_utc_timestamp(start_unix_time)
-        end_utc = self.local_to_utc_timestamp(end_unix_time)
+        # start_utc = self.local_to_utc_timestamp(start_unix_time)
+        # end_utc = self.local_to_utc_timestamp(end_unix_time)
 
         try:
             tx = self._contract_instance.functions.setVotingTime(
-                start_utc,
-                end_utc
+                start_unix_time,
+                end_unix_time
             ).build_transaction({
                 "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "chainId": self.sepolia,
@@ -70,9 +77,10 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, private_key)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
+         
 
-    def extend_time(self, private_key, new_end_time):
+    def extend_time(self, new_end_time, private_key=ADMIN_PRIVATE_KEY):
         try:
             tx = self._contract_instance.functions.extendVotingTime(
                 new_end_time
@@ -85,7 +93,25 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, private_key)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
+        
+    def get_voting_time(self):
+        try:
+            start_unix, end_unix = self._contract_instance.functions.getVotingTime().call()
+            
+            # Convert to readable datetime in UTC
+            start_time = datetime.utcfromtimestamp(start_unix, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+            end_time = datetime.utcfromtimestamp(end_unix, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+            return {
+                "start_unix": start_unix,
+                "end_unix": end_unix,
+                "start_time": start_time,
+                "end_time": end_time
+            }
+
+        except Exception as e:
+            return {"error": str(e)}
 
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
         print(f''' 
@@ -109,7 +135,7 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, private_key)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
 
     # def get_votes(self, position_id, candidate_hash):
     #     'Returns number of votes a candidate has in a given position'
@@ -136,7 +162,7 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, private_key)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
 
     def get_candidates(self, position_id):
         try:
@@ -182,7 +208,7 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
         
     def get_onchain_results(self):
         results = {}
@@ -217,7 +243,7 @@ class Blockchain:
             tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
-            return (bool(tx_receipt['status']), str(e))
+            return (False, str(e))
     
     def get_voting_time(self):
         try:

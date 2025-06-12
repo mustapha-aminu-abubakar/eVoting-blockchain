@@ -177,7 +177,7 @@ def signup_post():
     # New voter adding
     else:
         otp = generate_opt(6)
-        print(f'OTP: {otp}')
+        # print(f'OTP: {otp}')
 
         if EMAIL_SERVICE:
             mail_agent = MailServer()
@@ -233,7 +233,7 @@ def verify_otp_post(username_hash_hex):
     # OTP match
     # if check_password_hash(otp.otp, user_otp):
     print(f'OTP: {otp}')
-    print(f'User OTP: {user_otp}')
+    # print(f'User OTP: {user_otp}')
     if check_password_hash(otp.otp, user_otp):   
         delete_OTP(otp)
         fund_new_user_wallet(username_hash_hex)

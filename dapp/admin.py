@@ -165,6 +165,8 @@ def update_time_post():
     start_time = request.form.get('start_time').strip()
     end_time = request.form.get('end_time').strip()
     private_key = request.form.get('private_key').strip()
+    
+    print(f'[flask UI] Start time: {start_time}, End time: {end_time}')
 
     blockchain = Blockchain(
         fetch_admin_wallet_address(),
@@ -183,7 +185,6 @@ def update_time_post():
     elif start_time and end_time:
         # Sending transaction for setting start and end time of election
         status, tx_msg = blockchain.set_voting_time(
-            private_key,
             convert_to_unix_timestamp(start_time),
             convert_to_unix_timestamp(end_time)
         )
@@ -192,9 +193,9 @@ def update_time_post():
     elif end_time:
         # Sending transaction for extending the time
         status, tx_msg = blockchain.extend_time(
-            private_key,
             convert_to_unix_timestamp(end_time)
         )
         show_flash_msg(status, tx_msg)
+    print(blockchain.get_voting_time())
 
     return redirect(url_for('admin.admin_panel'))

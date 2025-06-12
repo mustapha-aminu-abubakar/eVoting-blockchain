@@ -102,4 +102,9 @@ contract EVoting {
         resultsPublished = true;
         emit ResultsPublished(block.timestamp);
     }
+
+    function getVotingTime() public view returns (uint, uint) {
+    return (startVotingTime, endVotingTime);
+    }
+
 }
