@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, session
 from flask_login import current_user, login_required
 from web3 import Web3
 
@@ -184,8 +184,9 @@ def cast_vote(candidate_id):
 
 
 @main.route('/result')
-def result(results):
+def result():
     'Show the election result if published'
+    results = session.get('results', None)
     return render_template(
         'result.html',
         results = results

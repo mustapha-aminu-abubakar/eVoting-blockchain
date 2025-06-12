@@ -1,6 +1,6 @@
 
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, session
 from flask_login import current_user, login_required
 
 from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
@@ -114,11 +114,12 @@ def publish_results():
             fetch_contract_address()
         )
         status, tx_receipt , results = blockchain.publish()
+        session['results'] = results
         flash(f"Results published. Tx: {tx_receipt}")
     except Exception as e:
         flash(str(e), 'error')
 
-    return redirect(url_for('main.result', results=results))
+    return redirect(url_for('main.result'))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required
