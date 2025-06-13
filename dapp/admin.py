@@ -1,14 +1,16 @@
 
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, session
 from flask_login import current_user, login_required
 
 from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_admin_wallet_address, fetch_all_voters,
                             fetch_contract_address, fetch_election,
-                            fetch_election_result,
+                            fetch_election_result, count_votes_by_voter,
                             fetch_election_result_restricted,
-                            fetch_voters_by_candidate_id, publish_result)
+                            fetch_voters_by_candidate_id, publish_result,
+                            count_total_votes_cast, count_total_possible_votes,
+                            fetch_all_positions)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import (convert_to_unix_timestamp, count_max_vote_owner_id,
@@ -31,9 +33,12 @@ def admin_panel():
     election = fetch_election()
     voters = fetch_all_voters()
     candidates = fetch_election_result_restricted()
+    total_votes_possible = count_total_possible_votes()
+    total_votes_cast = count_total_votes_cast()
+    positions_count = len(fetch_all_positions())
 
     # How many voted
-    total_vote_cast = count_total_vote_cast(voters)
+    # total_vote_cast = count_total_vote_cast(voters)
     # Max vote and IDs
     total_vote_count, max_vote_owner_id = count_max_vote_owner_id(candidates)
 
@@ -45,53 +50,76 @@ def admin_panel():
         voters=voters,
         total_voter=len(voters),
         total_vote_count=total_vote_count,
-        total_vote_cast=total_vote_cast
+        total_votes_possible=total_votes_possible,
+        positions_count=positions_count,
+        total_votes_cast=total_votes_cast,
+        count_votes_by_voter=count_votes_by_voter,
+        # total_vote_cast=total_vote_cast
     )
 
+
+# @admin.route('/publish')
+# @login_required
+# def publish():
+#     'Publish / Rollback election result'
+
+#     # Access deny for other
+#     if not is_admin(current_user):
+#         return redirect(url_for('auth.index'))
+
+#     blockchain = Blockchain(
+#         fetch_admin_wallet_address(),
+#         fetch_contract_address()
+#     )
+
+#     candidates = fetch_election_result()
+#     for candidate in candidates:
+#         voters = fetch_voters_by_candidate_id(candidate.id)
+#         # print(voters)
+
+#         # Checking vote counts
+#         if candidate.vote_count != len(voters):
+#             flash(f'Results tampered for {candidate.name}')
+#             return render_template('error.html', error_msg='Vote count mismatch')
+
+#         # Get the hash from the blokchain
+#         voteHash_from_blockchain = blockchain.get_hash_by_candidate_hash(
+#             sha256_hash(candidate.username)
+#         )
+
+#         # Validate the computed hash and bash from blockchain
+#         if not validate_result_hash(voters, voteHash_from_blockchain):
+#             flash(f'Results tampered for {candidate.name}')
+#             return render_template('error.html', error_msg='Voting hash mismatch')
+
+#     election = publish_result()
+
+#     # Notify current status
+#     if election.status == ElectionStatus.PUBLIC:
+#         flash('Election result is now public')
+#     else:
+#         flash('Election result is now private')
+
+#     return redirect(url_for('admin.admin_panel'))
 
 @admin.route('/publish')
 @login_required
-def publish():
-    'Publish / Rollback election result'
-
-    # Access deny for other
+def publish_results():
     if not is_admin(current_user):
         return redirect(url_for('auth.index'))
 
-    blockchain = Blockchain(
-        fetch_admin_wallet_address(),
-        fetch_contract_address()
-    )
-
-    candidates = fetch_election_result()
-    for candidate in candidates:
-        voters = fetch_voters_by_candidate_id(candidate.id)
-
-        # Checking vote counts
-        if candidate.vote_count != len(voters):
-            flash(f'Results tampered for {candidate.name}')
-            return render_template('error.html', error_msg='Vote count mismatch')
-
-        # Get the hash from the blokchain
-        voteHash_from_blockchain = blockchain.get_hash_by_candidate_hash(
-            sha256_hash(candidate.username)
+    try:
+        blockchain = Blockchain(
+            fetch_admin_wallet_address(),
+            fetch_contract_address()
         )
+        status, tx_receipt , results = blockchain.publish()
+        session['results'] = results
+        flash(f"Results published. Tx: {tx_receipt}")
+    except Exception as e:
+        flash(str(e), 'error')
 
-        # Validate the computed hash and bash from blockchain
-        if not validate_result_hash(voters, voteHash_from_blockchain):
-            flash(f'Results tampered for {candidate.name}')
-            return render_template('error.html', error_msg='Voting hash mismatch')
-
-    election = publish_result()
-
-    # Notify current status
-    if election.status == ElectionStatus.PUBLIC:
-        flash('Election result is now public')
-    else:
-        flash('Election result is now private')
-
-    return redirect(url_for('admin.admin_panel'))
-
+    return redirect(url_for('main.result'))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required
@@ -137,7 +165,10 @@ def update_time_post():
     # Get new time and private key input
     start_time = request.form.get('start_time').strip()
     end_time = request.form.get('end_time').strip()
+    tz = request.form.get('tz').strip()
     private_key = request.form.get('private_key').strip()
+    
+    print(f'[flask UI] Start time: {start_time}, End time: {end_time}, timezone: {tz}')
 
     blockchain = Blockchain(
         fetch_admin_wallet_address(),
@@ -156,18 +187,19 @@ def update_time_post():
     elif start_time and end_time:
         # Sending transaction for setting start and end time of election
         status, tx_msg = blockchain.set_voting_time(
-            private_key,
-            convert_to_unix_timestamp(start_time),
-            convert_to_unix_timestamp(end_time)
+            start_time,
+            end_time,
+            tz
         )
         show_flash_msg(status, tx_msg)
 
     elif end_time:
         # Sending transaction for extending the time
         status, tx_msg = blockchain.extend_time(
-            private_key,
             convert_to_unix_timestamp(end_time)
         )
         show_flash_msg(status, tx_msg)
+    times = blockchain.get_voting_time()
+    print(times)
 
     return redirect(url_for('admin.admin_panel'))

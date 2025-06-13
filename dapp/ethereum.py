@@ -1,14 +1,15 @@
 import json
 import os
-
 from datetime import datetime, timezone
 from tzlocal import get_localzone
 import pytz
 
 from web3 import Web3
 from dotenv import load_dotenv
-
+from collections import defaultdict
 from .credentials import WEB3_PROVIDER_URL
+from .db_operations import get_offchain_results
+from .models import Candidate, Position
 
 load_dotenv()
 ADMIN_PRIVATE_KEY = os.getenv("ADMIN_PRIVATE_KEY")
@@ -31,165 +32,248 @@ class Blockchain:
             address=self._contract_address
         )
 
-
     def _read_ABI(self):
         with open(self._ABI_DIR) as ABI_file:
             self._ABI = json.loads(ABI_file.read())
 
     def _get_nonce(self):
-        'Gets the nonce value form the wallet'
-        return self.w3.eth.getTransactionCount(self._wallet_address)
+        return self.w3.eth.get_transaction_count(self._wallet_address, 'pending')
 
-    def local_to_utc_timestamp(self, local_timestamp: int) -> int:
-        """
-        Converts a local Unix timestamp (assumed to be in local timezone)
-        to a UTC Unix timestamp.
-        
-        Args:
-            local_timestamp (int): The timestamp in local time (seconds since epoch).
-        
-        Returns:
-            int: Corresponding UTC timestamp (seconds since epoch).
-        """
-        # Get the system's local timezone (ZoneInfo object)
+    def local_to_utc_timestamp(self, _timestamp: str) -> int:
+        # local_tz = get_localzone()
+        # local_dt = datetime.fromtimestamp(local_timestamp).replace(tzinfo=local_tz)
+        # utc_dt = local_dt.astimezone(pytz.utc)
+        # return int(utc_dt.timestamp())
+        # Parse string to naive datetime
+        print(f'Timestamp: {_timestamp}')
+        local_naive_dt = datetime.strptime(_timestamp, "%Y-%m-%dT%H:%M")
+        # Get local timezone
         local_tz = get_localzone()
-        
-        # Step 1: Create naive datetime from timestamp
-        local_dt_naive = datetime.fromtimestamp(local_timestamp)
-        
-        # Step 2: Attach local timezone info using replace
-        local_dt = local_dt_naive.replace(tzinfo=local_tz)
-        
-        # Step 3: Convert to UTC
+        # Localize the naive datetime
+        local_dt = local_tz.localize(local_naive_dt)
+        # Convert to UTC
         utc_dt = local_dt.astimezone(pytz.utc)
-        
-        # Step 4: Return UTC timestamp
+        print(f"Local time: {local_dt.isoformat()} UTC time: {utc_dt.isoformat()}")
+        print(f"Local timestamp: {local_dt.timestamp()} UTC timestamp: {utc_dt.timestamp()}")
+        # Return UTC timestamp
         return int(utc_dt.timestamp())
+    
+    def to_utc_timestamp(self, dt_str, tz_name):
+        naive = datetime.strptime(dt_str, "%Y-%m-%dT%H:%M")
+        local = pytz.timezone(tz_name).localize(naive)
+        return int(local.astimezone(pytz.utc).timestamp())
+    
 
-    def set_voting_time(self, private_key, start_unix_time, end_unix_time):
-        'Set election voting time in contract'
+    def set_voting_time(self, start_unix_time, end_unix_time, tz, private_key=ADMIN_PRIVATE_KEY):
         print(" [set_voting_time] Building transaction...")
 
-        start_unix_time_utc = self.local_to_utc_timestamp(start_unix_time)
-        end_unix_time_utc = self.local_to_utc_timestamp(end_unix_time)
-
-        print(f" [set_voting_time] start_unix_time: {start_unix_time_utc} {datetime.fromtimestamp(start_unix_time_utc).isoformat()}")
-
+        start_ts_utc = self.to_utc_timestamp(start_unix_time, tz)
+        end_ts_utc = self.to_utc_timestamp(end_unix_time, tz)
 
         try:
             tx = self._contract_instance.functions.setVotingTime(
-                start_unix_time_utc,
-                end_unix_time_utc
-            ).buildTransaction(
-                {
-                    "gasPrice": self.w3.eth.gas_price,
-                    "chainId": self.sepolia,
-                    "from": self._wallet_address,
-                    "nonce": self._get_nonce()
-                }
-            )
-
-            # (Status, Tx msg)
-            return (True, self._send_tx(tx, private_key))
+                start_ts_utc,
+                end_ts_utc
+            ).build_transaction({
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
+                "chainId": self.sepolia,
+                "from": self._wallet_address,
+                "nonce": self._get_nonce()
+            })
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
             return (False, str(e))
+         
 
-    def vote(self, private_key, candidate_hash, voter_hash):
-        'Add a Vode hash in contract'
-        candidate_hash = f'0x{candidate_hash}'
-        voter_hash = f'0x{voter_hash}'
-
-        print(" [vote] Building transaction...")
-
-        try:
-            tx = self._contract_instance.functions.vote(
-                voter_hash,
-                candidate_hash
-            ).buildTransaction(
-                {
-                    "gasPrice": self.w3.eth.gas_price,
-                    "gas": 2000000,
-                    "chainId": self.sepolia,
-                    "from": self._wallet_address,
-                    "nonce": self._get_nonce()
-                }
-            )
-
-            # (Status, Tx msg)
-            return (True, self._send_tx(tx, private_key))
-        except Exception as e:
-            return (False, str(e))
-
-    def extend_time(self, private_key, end_unix_time):
-        'Extend the election time in contract'
+    def extend_time(self, new_end_time, private_key=ADMIN_PRIVATE_KEY):
         try:
             tx = self._contract_instance.functions.extendVotingTime(
-                end_unix_time
-            ).buildTransaction(
-                {
-                    "gasPrice": self.w3.eth.gas_price,
-                    "chainId": self.sepolia,
-                    "from": self._wallet_address,
-                    "nonce": self._get_nonce()
-                }
-            )
+                new_end_time
+            ).build_transaction({
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
+                "chainId": self.sepolia,
+                "from": self._wallet_address,
+                "nonce": self._get_nonce()
+            })
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
+        except Exception as e:
+            return (False, str(e))
+        
+    def get_voting_time(self):
+        try:
+            start_unix, end_unix = self._contract_instance.functions.getVotingTime().call()
+            
+            # Convert to readable datetime in UTC
+            start_time = datetime.utcfromtimestamp(start_unix, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+            end_time = datetime.utcfromtimestamp(end_unix, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
-            # (Status, Tx msg)
-            return (True, self._send_tx(tx, private_key))
+            return {
+                "start_unix": start_unix,
+                "end_unix": end_unix,
+                "start_time": start_time,
+                "end_time": end_time
+            }
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    def vote(self, private_key, position_id, voter_hash, candidate_hash):
+        print(f''' 
+              [vote] Building transaction...
+              Voter Hash: {voter_hash}
+              Candidate Hash: {candidate_hash}
+              Position ID: {position_id}
+              ''')
+        try:
+            tx = self._contract_instance.functions.vote(
+                int(position_id),
+                voter_hash,
+                candidate_hash
+            ).build_transaction({
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
+                "gas": 2000000,
+                "chainId": self.sepolia,
+                "from": self._wallet_address,
+                "nonce": self._get_nonce()
+            })
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
             return (False, str(e))
 
-    def _send_tx(self, tx, private_key):
-        'Method for signing Tx and sending'
-        private_key = f'0x{private_key}'
+    # def get_votes(self, position_id, candidate_hash):
+    #     'Returns number of votes a candidate has in a given position'
+    #     try:
+    #         return self._contract_instance.functions.getVotes(
+    #             int(position_id),
+    #             f'0x{candidate_hash}'
+    #         ).call()
+    #     except Exception as e:
+    #         return f"Error fetching votes: {str(e)}"
 
-        print(" Signing Tx...")
-        signed_tx = self.w3.eth.account.sign_transaction(
-            tx,
-            private_key=private_key
-        )
+    def register_candidate(self, private_key, position_id, candidate_hash):
+        'Admin-only: Registers a candidate hash under a specific position'
+        try:
+            tx = self._contract_instance.functions.registerCandidate(
+                int(position_id),
+                candidate_hash
+            ).build_transaction({
+                "gasPrice": int(self.w3.eth.gas_price * 1.2),
+                "chainId": self.sepolia,
+                "from": self._wallet_address,
+                "nonce": self._get_nonce()
+            })
+            tx_receipt = self._send_tx(tx, private_key)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
+        except Exception as e:
+            return (False, str(e))
 
-        print(" Sending Tx...")
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-
-        print(" Waiting for Tx receipt...")
-        tx_receipt = self.w3.eth.wait_for_transaction_receipt(
-            tx_hash,
-            timeout=180
-        )
-
-        print(tx_receipt['transactionHash'].hex())
-        return tx_receipt['transactionHash'].hex()
-
-    def get_hash_by_candidate_hash(self, candidate_hash):
-        'Fetch the voting hash from the contract'
-        candidate_hash = f'0x{candidate_hash}'
-
-        vote_hash = self._contract_instance.functions.getCandidateVoteHash(
-            candidate_hash
-        ).call(
-            {'from': self.w3.eth.defaultAccount}
-        )
-
-        return vote_hash.hex()
+    def get_candidates(self, position_id):
+        try:
+            return [
+                candidate.hex() for candidate in
+                self._contract_instance.functions.getCandidates(position_id).call()
+            ]
+        except Exception as e:
+            return f"Error fetching candidates: {str(e)}"
 
     def print_current_block_timestamp(self):
         timestamp = self._contract_instance.functions.getCurrentTimestamp().call()
         dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
         print(f"Current contract block.timestamp: {timestamp} ({dt.isoformat()})")
 
+    def _send_tx(self, tx, private_key):
+        private_key = f'0x{private_key}'
+        print(f" Signing Tx...{private_key}")
+        signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=private_key)
+        # print(" Sending Tx...")
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        # print(" Waiting for Tx receipt...")
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+        print(f"{bool(tx_receipt['status'])} gasused: {tx_receipt['gasUsed']}")
+        # return tx_receipt['transactionHash'].hex()
+        return tx_receipt
+
     def fund_wallet(self, to_address):
-        tx = {
-            'to': to_address,
-            'value': self.w3.toWei(0.002, 'ether'),
-            'gas': 21000,
-            'gasPrice': self.w3.eth.gas_price,
-            "nonce": self._get_nonce(),
-            'chainId': self.sepolia  # Sepolia
-        }
-        signed_tx = self.w3.eth.account.sign_transaction(tx, ADMIN_PRIVATE_KEY)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        try:
+            tx = {
+                'to': to_address,
+                'value': self.w3.to_wei(0.002, 'ether'),
+                'gas': 21000,
+                'nonce': self._get_nonce(),
+                'chainId': self.sepolia,
+                'maxFeePerGas': int(self.w3.eth.gas_price * 1.2),
+                'maxPriorityFeePerGas': self.w3.eth.gas_price // 2,
+                'type': 2  # EIP-1559 transaction type
+            }
+            # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
+            # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")    
 
-        print(f"user's wallet balance: {self.w3.eth.get_balance(to_address)}")
-        return tx_hash.hex()
+            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
+        except Exception as e:
+            return (False, str(e))
+        
+    def get_onchain_results(self):
+        results = {}
+        for candidate in Candidate.query.all():
+            candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
+            count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
+            results[candidate.id] = candidate.as_dict() 
+            results[candidate.id]['vote_count'] = count
+            results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
+            results[candidate.id]['position'] = candidate.position.position
+            # print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
+        # print(results)
+        return results
+    
+    
+    def group_candidates_by_position(self):
+        grouped = defaultdict(list)
+        results = self.get_onchain_results()
 
+        for candidate in results.values():
+            grouped[candidate["position"]].append(candidate)
+
+        # Mark winners
+        for position, candidates in grouped.items():
+            max_votes = max(c["vote_count"] for c in candidates)
+            for c in candidates:
+                c["is_winner"] = c["vote_count"] == max_votes
+        print(f"Grouped candidates by position: {grouped}")
+        return dict(grouped) 
+    
+    def publish(self):
+        try:
+            # offchain = get_offchain_results()
+            results = self.group_candidates_by_position()
+
+            # for cid in offchain:
+            #     if offchain[cid] != onchain.get(cid, 0):
+            #         raise Exception(f"Mismatch for candidate {cid}: offchain {offchain[cid]}, onchain {onchain.get(cid, 0)}")
+
+            # If matched, finalize on-chain
+            tx = self._contract_instance.functions.publishResults().build_transaction({
+                "from": self.w3.eth.default_account,
+                "nonce": self._get_nonce(),
+                "chainId": self.sepolia,
+                "gas": 200000,
+                "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                "maxPriorityFeePerGas": self.w3.eth.gas_price // 2
+            })
+
+            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex(), results)
+        except Exception as e:
+            return (False, str(e), None)
+    
+    def get_voting_time(self):
+        try:
+            now = self._contract_instance.functions.getCurrentTimestamp().call()
+            start = self._contract_instance.functions.startVotingTime().call()
+            end = self._contract_instance.functions.endVotingTime().call()
+            print (f"Current time: {now}, Start time: {start}, End time: {end}")
+        except Exception as e:
+            return (False, str(e))

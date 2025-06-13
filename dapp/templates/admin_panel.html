@@ -22,6 +22,9 @@
                 <input class="form-control" id="private_key" type="password" name="private_key"
                     placeholder="Admin private key">
             </div>
+    
+            <input type="hidden" name="tz" id="tz">
+
             <div class="col-xs-2">
                 <label for="update">&zwnj;</label>
                 <button type="submit" class="btn btn-default form-control" id="update">Update</button>
@@ -35,7 +38,7 @@
 <div class="container">
     <h2>
         Candidates voting status
-        <a href="{{ url_for('admin.publish') }}">
+        <a href="{{ url_for('admin.publish_results') }}">
             <button class='btn btn-primary pull-right' onclick="return confirm('Are you sure?');">
                 {{ 'Rollback' if election_status else 'Publish result' }}
             </button>
@@ -61,8 +64,8 @@
             {% for candidate in candidates %}
             <tr class="{{ 'success' if candidate.id in max_vote_owner_id else 'active' }}">
                 <td>{{ candidate.username }}</td>
-                <td>{{ candidate.name }}</td>
-                <td>{{ candidate.vote_count }}</td>
+                <td>{{ candidate.name }}</td>                
+                <td>{{ candidate.position.position }}</td>
                 <td>
                     <a href="{{ url_for('admin.block_candidate', candidate_id=candidate.id) }}">
                         <button type="button"
@@ -84,7 +87,7 @@
     <h2>
         Voters
         <span class="label label-default pull-right">
-            {{ total_vote_cast }} / {{ total_voter }}
+            {{ total_voter }}
         </span>
     </h2>
 
@@ -102,7 +105,19 @@
             <tr class="{{ 'success' if voter.vote_status else 'active' }}">
                 <td>{{ voter.username_hash }}</td>
                 <td>{{ voter.wallet_address }}</td>
-                <td>{{ 'VOTED' if voter.vote_status else 'NOT VOTED'}}</td>
+                {% if count_votes_by_voter(voter.id) == positions_count %}
+                <td>
+                    <span class="label label-success">Voted</span>
+                </td>
+                {% elif count_votes_by_voter(voter.id) == 0 %}
+                <td>
+                    <span class="label label-danger">Not voted</span>
+                </td>
+                {% else %}
+                <td>
+                    <span class="label label-warning">Not completed</span>
+                </td>
+                {% endif %}
                 <td>
                     <a href="{{ url_for('admin.block_voter', voter_id=voter.id) }}">
                         <button type="button"
@@ -117,4 +132,7 @@
     </table>
 
 </div>
+<script>
+    document.getElementById('tz').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+</script>
 {% endblock %}

@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import os
 
 # Load .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+# load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv()
 # Load secret key
 FERNET_KEY = os.environ.get("FERNET_KEY")
 fernet = Fernet(FERNET_KEY)
