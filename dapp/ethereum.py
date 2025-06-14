@@ -220,7 +220,7 @@ class Blockchain:
         results = {}
         for candidate in Candidate.query.all():
             candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
-            count = self._contract_instance.functions.getVotes(candidate.position_id, candidate_hash_bytes32).call()
+            count = self._contract_instance.functions.getVoteCounts(candidate.position_id, candidate_hash_bytes32).call()
             results[candidate.id] = candidate.as_dict() 
             results[candidate.id]['vote_count'] = count
             results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
@@ -245,10 +245,19 @@ class Blockchain:
         print(f"Grouped candidates by position: {grouped}")
         return dict(grouped) 
     
+    def get_all_votes(self):
+        try:
+            all_votes = self._contract_instance.functions.getAllVotes().call()
+            print(f"All votes fetched: {all_votes}")
+            return all_votes
+        except Exception as e:
+            return f"Error fetching all votes: {str(e)}"
+    
     def publish(self):
         try:
             # offchain = get_offchain_results()
-            results = self.group_candidates_by_position()
+            # results = self.group_candidates_by_position()
+            
 
             # for cid in offchain:
             #     if offchain[cid] != onchain.get(cid, 0):
@@ -265,7 +274,7 @@ class Blockchain:
             })
 
             tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
-            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex(), results)
+            return (bool(tx_receipt['status']), tx_receipt['transactionHash'].hex())
         except Exception as e:
             return (False, str(e), None)
     

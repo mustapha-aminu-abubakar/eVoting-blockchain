@@ -2,10 +2,18 @@
 pragma solidity ^0.8.0;
 
 contract EVoting {
+
+    struct Vote {
+        uint positionId;
+        bytes32 voterHash;
+        bytes32 candidateHash;
+        uint timestamp;
+    }
     uint256 public startVotingTime;
     uint256 public endVotingTime;
     address public admin;
     uint public totalVotes;
+    Vote[] public votesCast;
 
     constructor() {
         admin = msg.sender;
@@ -71,11 +79,16 @@ contract EVoting {
         hasVoted[positionId][voterHash] = true;
         voterTimestamps[positionId][voterHash] = block.timestamp;
         totalVotes++;
+        votesCast.push(Vote(positionId, voterHash, candidateHash, block.timestamp));
     }
 
-    function getVotes(uint positionId, bytes32 candidateHash) public view returns (uint) {
+    function getVoteCounts(uint positionId, bytes32 candidateHash) public view returns (uint) {
         require(block.timestamp > endVotingTime || msg.sender == admin, "Results not available yet");
         return voteCounts[positionId][candidateHash];
+    }
+
+    function getAllVotes() public view returns (Vote[] memory) {
+        return votesCast;
     }
 
     function getCandidates(uint positionId) public view returns (bytes32[] memory) {
@@ -104,7 +117,7 @@ contract EVoting {
     }
 
     function getVotingTime() public view returns (uint, uint) {
-    return (startVotingTime, endVotingTime);
+        return (startVotingTime, endVotingTime);
     }
 
 }
