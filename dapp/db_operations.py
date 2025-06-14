@@ -215,14 +215,13 @@ def add_results(position_id, position, candidate_name, candidate_hash, vote_coun
     database.session.commit()
     return True, "Result added successfully."
 
-def add_votes(position_id, voter_hash, candidate_hash, vote_hash, date_time_ts):
+def add_votes(position_id, voter_hash, candidate_hash, date_time_ts):
 
     # Add the new vote
     new_vote = Vote(
         position_id=position_id,
         voter_hash=voter_hash,
         candidate_hash=candidate_hash,
-        vote_hash=vote_hash,
         date_time_ts=date_time_ts
     )
     

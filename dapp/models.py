@@ -223,12 +223,6 @@ class Vote(database.Model, LockableMixin):
         nullable=False
     )
     
-    vote_hash = database.Column(
-        database.String(66),  # 0x-prefixed hex string of 32 bytes
-        unique=True,
-        nullable=False
-    )
-    
     date_time_ts = database.Column(
         database.Integer,
         nullable=False,

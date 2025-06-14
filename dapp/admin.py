@@ -122,29 +122,29 @@ def publish_results():
         results = blockchain.group_candidates_by_position()
         votes = blockchain.get_all_votes()    
         
-        for result in results:
-            add_results(
-                position_id=result['position_id'],
-                position=result['position'],
-                candidate_name=result['candidate_name'],
-                candidate_hash=result['candidate_hash'],
-                vote_count=result['vote_count'],
-                is_winner=result['is_winner']
-            )
+        for _, pos_result in results.items():
+            for cand in pos_result:
+                add_results(
+                    position_id=cand['position_id'],
+                    position=cand['position'],
+                    candidate_name=cand['name'],
+                    candidate_hash=cand['candidate_hash'],
+                    vote_count=cand['vote_count'],
+                    is_winner=cand['is_winner']
+                )
         
-        for vote in votes:
+        for (position_id, voter_hash, candidate_hash, date_time_ts)  in votes:
             add_votes(
-                voter_hash=vote['voter_hash'],
-                candidate_hash=vote['candidate_hash'],
-                vote_hash=vote['vote_hash'],
-                date_time_ts=vote['date_time_ts'],
-                position_id=vote['position_id']
+                voter_hash=voter_hash,
+                candidate_hash=candidate_hash,
+                date_time_ts=date_time_ts,
+                position_id=position_id
             )    
         
             
         print(f'Results:\n {results}')
         print(f'Votes:\n {votes}')
-        print(f'Votes model is_locked: {Voter.is_locked()}')
+        print(f'Votes model is_locked: {Voter.is_locked(session)}')
         flash(f"Results published. Tx: {tx_receipt}")
     except Exception as e:
         flash(str(e), 'error')
