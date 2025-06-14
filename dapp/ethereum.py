@@ -286,3 +286,10 @@ class Blockchain:
             print (f"Current time: {now}, Start time: {start}, End time: {end}")
         except Exception as e:
             return (False, str(e))
+        
+    def has_user_voted(self, position_id, voter_hash):
+        try:
+            return self._contract_instance.functions.hasUserVoted(position_id, voter_hash).call()
+        except Exception as e:
+            return (False, str(e))    
+    

@@ -12,7 +12,8 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_all_positions,
                             fetch_position_by_id,
                             fetch_candidate_by_position_id,
-                            has_voted_for_position)
+                            has_voted_for_position,
+                            fetch_candidate_by_hash)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import build_vote_cast_hash, count_max_vote_owner_id, is_admin, sha256_hash
@@ -57,7 +58,23 @@ def positions():
     if is_admin(current_user):
         return redirect(url_for('auth.index'))
     
+    blockchain = Blockchain(
+        current_user.wallet_address,
+        fetch_contract_address()
+    )
+    
     positions = fetch_all_positions()
+    # print(f'Positions: {positions}')
+    has_voted_for_position = {}
+    for position in positions:
+        try:
+        # Check if user has voted for this position
+            status = blockchain.has_user_voted(position.id, current_user.username_hash)
+            has_voted_for_position[position.id] = True
+        except Exception as e:
+            flash(f'Error checking vote status for position {position.position}: {str(e)}')
+            has_voted_for_position[position.id] = False
+    
     return render_template(
         'positions.html',
         user=current_user,
@@ -68,19 +85,29 @@ def positions():
     
 @main.route('/positions/<int:position_id>')
 @login_required
-def position(position_id):
+def position(position_id, has_voted_for_position_id=False):
     'Shows the contested position details'
 
     # Access deny for ADMIN
     if is_admin(current_user):
         return redirect(url_for('auth.index'))
 
+    blockchain = Blockchain(
+        current_user.wallet_address,
+        fetch_contract_address()
+    )
+    
     position = fetch_position_by_id(position_id)
-    candidates = fetch_candidate_by_position_id(position_id)
-    
-    has_voted_for_position_id = request.args.get('has_voted_for_position_id', default=False, type=lambda v: v.lower() == 'true')
+    candidates = {}
+    candidate_hashes = blockchain.get_candidates(position_id)
+    print(f'Candidate hashes for position {position_id}: {candidate_hashes}')
+    for _hash in candidate_hashes:
+        # print(f'Candidate hash: {Web3.to_bytes(hexstr=_hash)}')
+        candidate_hash_bytes = Web3.to_bytes(hexstr=_hash)
+        candidates[_hash] = fetch_candidate_by_hash(candidate_hash_bytes)
+    print(f'candidates: {candidates}')
+    # has_voted_for_position_id = request.args.get('has_voted_for_position_id', default=False, type=lambda v: v.lower() == 'true')
 
-    
     if not position or not candidates:
         flash('Position or candidates not found')
         return redirect(url_for('main.positions'))
@@ -130,8 +157,8 @@ def cast_vote(candidate_id):
         vote_hash: {vote_hash}
         private_key: {private_key}
         ''')
-        _, msg = add_new_vote_record(voter, selected_candidate, vote_hash)
-        print(f'Offline vote record: {msg}')
+        # _, msg = add_new_vote_record(voter, selected_candidate, vote_hash)
+        # print(f'Offline vote record: {msg}')
         return redirect(url_for('main.positions'))
     else:
         flash(f'Vote failed: {tx_msg}')

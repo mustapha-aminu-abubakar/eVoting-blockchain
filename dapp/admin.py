@@ -13,6 +13,7 @@ from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_all_positions)
 from .ethereum import Blockchain
 from .role import ElectionStatus
+from .models import Candidate, Voter
 from .validator import (convert_to_unix_timestamp, count_max_vote_owner_id,
                         count_total_vote_cast, is_admin, sha256_hash,
                         validate_result_hash)
@@ -122,6 +123,7 @@ def publish_results():
         votes = blockchain.get_all_votes()        
         print(f'Results:\n {results}')
         print(f'Votes:\n {votes}')
+        print(f'Votes model is_locked: {Voter.is_locked()}')
         flash(f"Results published. Tx: {tx_receipt}")
     except Exception as e:
         flash(str(e), 'error')

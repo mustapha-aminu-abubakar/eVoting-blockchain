@@ -29,8 +29,7 @@ class Otp(database.Model, LockableMixin):
         )
         '''
 
-
-class Voter(database.Model, LockableMixin):
+class Voter(database.Model, LockableMixin, UserMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
@@ -78,7 +77,7 @@ class Voter(database.Model, LockableMixin):
     #     nullable=False,
     #     default=0
     # )
-
+    
     voter_status = database.Column(
         database.Boolean,
         nullable=False,
@@ -95,6 +94,7 @@ class Voter(database.Model, LockableMixin):
             wallet_address: {self.wallet_address}
             private_key_encrypted: {self.private_key_encrypted}
             voter_status: {self.voter_status}
+            is active: {self.voter_status}
         )
         '''
 
@@ -229,6 +229,11 @@ class Vote(database.Model, LockableMixin):
         nullable=False
     )
     
+    date_time_ts = database.Column(
+        database.Integer,
+        nullable=False,
+    )
+    
     position = database.relationship("Position", backref="votes")
     
 
@@ -240,6 +245,7 @@ class Vote(database.Model, LockableMixin):
             voter_hash: {self.voter_hash}
             candidate_hash: {self.candidate_hash}
             vote_hash: {self.vote_hash} 
+            date_time_ts: {self.date_time_ts}
         )
         '''
 
@@ -251,9 +257,19 @@ class Result(database.Model, LockableMixin):
 
     position_id = database.Column(
         database.Integer,
-        database.ForeignKey('position.id'),
         nullable=False
     )
+    
+    position = database.Column(
+        database.String(100),
+        nullable=False
+    )
+    
+    candidate_name = database.Column(
+        database.String(100),
+        nullable=False
+    )
+
 
     candidate_hash = database.Column(
         database.String(66),
@@ -272,7 +288,6 @@ class Result(database.Model, LockableMixin):
         default=False
     )
     
-    position = database.relationship("Position", backref="results")
 
     def __repr__(self) -> str:
         return f'''
@@ -282,6 +297,8 @@ class Result(database.Model, LockableMixin):
             candidate_hash: {self.candidate_hash}
             vote_count: {self.vote_count}
             is_winner: {self.is_winner}
+            position: {self.position}
+            candidate_name: {self.candidate_name}
         )
         '''
         

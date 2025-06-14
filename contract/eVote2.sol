@@ -120,4 +120,9 @@ contract EVoting {
         return (startVotingTime, endVotingTime);
     }
 
+    function hasUserVoted(uint positionId, bytes32 voterHash) public view returns (bool) {
+        return hasVoted[positionId][voterHash];
+    }
+
+
 }

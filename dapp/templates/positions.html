@@ -38,7 +38,7 @@
         <tr>
             <td>{{ position.position }}</td>
             <td>
-            {% if has_voted_for_position(user.id, position.id) %}
+            {% if not has_voted_for_position[position.id] %}
                 <button type="button" class="btn btn-sm btn-secondary" disabled>Voted</button>
             {% else %}
                 <a href="{{ url_for('main.position', position_id=position.id, has_voted_for_position_id='false') }}">

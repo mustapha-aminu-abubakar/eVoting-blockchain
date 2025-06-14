@@ -92,6 +92,9 @@ def fetch_candidate_by_id(candidate_id):
         id=candidate_id
     ).first()
 
+def fetch_candidate_by_hash(candidate_hash):
+    return Candidate.query.filter_by(candidate_hash=candidate_hash).first()
+
 
 def fetch_voter_by_id(voter_id):
     return Voter.query.filter_by(
@@ -190,10 +193,35 @@ def has_voted_for_position(voter_id, position_id):
 # Add/Delete section
 
 
-# def add_new_vote_record(voter, candidate):
-#     voter.vote_status = candidate.id
-#     candidate.vote_count += 1
-#     database.session.commit()
+def add_results(position_id, position, candidate_name, candidate_hash, vote_count, is_winner):
+    # Check if the result already exists
+    # Add the new result
+    new_result = Vote(
+        position_id=position_id,
+        position=position,
+        candidate_name=candidate_name,
+        candidate_hash=candidate_hash,
+        vote_count=vote_count,
+        is_winner=is_winner
+    )
+    database.session.add(new_result)
+    database.session.commit()
+    return True, "Result added successfully."
+
+def add_votes(position_id, voter_hash, candidate_hash, vote_hash, date_time_ts):
+
+    # Add the new vote
+    new_vote = Vote(
+        position_id=position_id,
+        voter_hash=voter_hash,
+        candidate_hash=candidate_hash,
+        vote_hash=vote_hash,
+        date_time_ts=date_time_ts
+    )
+    
+    database.session.add(new_vote)
+    database.session.commit()
+    return True, "Vote added successfully."
 
 def add_new_vote_record(voter, candidate, vote_hash):
     # Check if voter has already voted for this position

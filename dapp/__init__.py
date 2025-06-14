@@ -35,7 +35,7 @@ def init_candidates(path, db, Candidate):
                 candidate_hash
                 )
             
-            print(f"Candidate {row[1]} registration status: {msg}, candidate_hash: {candidate_hash}")
+            print(f"Candidate {row[1]} registration status: {msg}, candidate_hash: {candidate_hash.hex()}")
             db.session.add(Candidate(
                 id=row[0], 
                 name=row[1], 
@@ -79,7 +79,7 @@ def setup_admin(path, db, Users, Election):
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain64.sqlite"
+    DB_NAME = "offchain68.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
