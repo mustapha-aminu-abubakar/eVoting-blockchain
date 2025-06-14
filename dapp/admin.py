@@ -10,7 +10,7 @@ from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_election_result_restricted,
                             fetch_voters_by_candidate_id, publish_result,
                             count_total_votes_cast, count_total_possible_votes,
-                            fetch_all_positions)
+                            fetch_all_positions, add_votes, add_results)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .models import Candidate, Voter
@@ -120,7 +120,28 @@ def publish_results():
             return redirect(url_for('admin.admin_panel'))
         
         results = blockchain.group_candidates_by_position()
-        votes = blockchain.get_all_votes()        
+        votes = blockchain.get_all_votes()    
+        
+        for result in results:
+            add_results(
+                position_id=result['position_id'],
+                position=result['position'],
+                candidate_name=result['candidate_name'],
+                candidate_hash=result['candidate_hash'],
+                vote_count=result['vote_count'],
+                is_winner=result['is_winner']
+            )
+        
+        for vote in votes:
+            add_votes(
+                voter_hash=vote['voter_hash'],
+                candidate_hash=vote['candidate_hash'],
+                vote_hash=vote['vote_hash'],
+                date_time_ts=vote['date_time_ts'],
+                position_id=vote['position_id']
+            )    
+        
+            
         print(f'Results:\n {results}')
         print(f'Votes:\n {votes}')
         print(f'Votes model is_locked: {Voter.is_locked()}')

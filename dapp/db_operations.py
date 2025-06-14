@@ -1,5 +1,5 @@
 from .db import database
-from .models import Candidate, Election, Otp, Vote, Voter, Position
+from .models import Candidate, Election, Otp, Vote, Voter, Position, Result
 from .role import AccountStatus, UserRole
 
 # Retrieve section
@@ -135,6 +135,13 @@ def count_total_votes_cast():
 def count_total_possible_votes():
     return Voter.query.count() * Position.query.count()
 
+def fetch_all_results():
+    return Result.query.all()
+
+def fetch_vote_by_candidate_id(candidate_id):
+    return Vote.query.filter_by(
+        candidate_id=candidate_id
+    ).all()
 # Block section
 
 

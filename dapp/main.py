@@ -13,7 +13,8 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_position_by_id,
                             fetch_candidate_by_position_id,
                             has_voted_for_position,
-                            fetch_candidate_by_hash)
+                            fetch_candidate_by_hash,
+                            fetch_all_results, fetch_vote_by_candidate_id)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import build_vote_cast_hash, count_max_vote_owner_id, is_admin, sha256_hash
@@ -213,11 +214,21 @@ def cast_vote(candidate_id):
 @main.route('/result')
 def result():
     'Show the election result if published'
-    results = []
+    results = fetch_all_results()
     return render_template(
         'result.html',
         results = results
     )
+    
+@main.route('/results/<int:candidate_id>')
+def result_by_candidate(candidate_id):
+    'Show the election result by candidate ID'
+    votes = fetch_vote_by_candidate_id(candidate_id)
+    return render_template(
+        'result_by_candidate.html',
+        votes=votes,
+    )    
+    #
     # If not public
     # election = fetch_election()
     # if election.status == ElectionStatus.PRIVATE:

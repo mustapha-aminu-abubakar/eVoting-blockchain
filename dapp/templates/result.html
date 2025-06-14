@@ -18,13 +18,12 @@
         </tr>
     </thead>
     <tbody>
-        {% for k, v in results.items() %}
-            {% for c in v %}
-            <tr class="{% if c.is_winner and c.vote_count > 0 %}success{% else %}active{% endif %}">
-                <td>{{ k }}</td>
-                <td>{{ c.name }}</td>
-                <td>{{ c.vote_count }}</td>
-                <td>{{ c.candidate_hash }}</td>
+        {% for r in results %}
+            <tr class="{% if r.is_winner and r.vote_count > 0 %}success{% else %}active{% endif %}">
+                <td>{{ r.position }}</td>
+                <td>{{ r.candidate_name }}</td>
+                <td>{{ r.vote_count }}</td>
+                <td>{{ r.candidate_hash }}</td>
             </tr>
             {% endfor %}
         {% endfor %}
