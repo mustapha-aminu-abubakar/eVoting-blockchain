@@ -1,9 +1,9 @@
 from flask_login import UserMixin
-
+from .mixins import LockableMixin, register_lock_events  # <- import
 from dapp.db import database
 
 
-class Otp(database.Model):
+class Otp(database.Model, LockableMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
@@ -30,7 +30,7 @@ class Otp(database.Model):
         '''
 
 
-class Voter(database.Model, UserMixin):
+class Voter(database.Model, LockableMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
@@ -98,17 +98,11 @@ class Voter(database.Model, UserMixin):
         )
         '''
 
-
-class Candidate(database.Model):
+class Candidate(database.Model, LockableMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
     )
-
-    # username = database.Column(
-    #     database.String(64),
-    #     unique=True
-    # )
 
     name = database.Column(
         database.String(100),
@@ -164,7 +158,7 @@ class Candidate(database.Model):
             'candidate_hash': self.candidate_hash
         }
 
-class Position(database.Model):
+class Position(database.Model, LockableMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
@@ -184,7 +178,7 @@ class Position(database.Model):
         )
         '''
 
-class Election(database.Model):
+class Election(database.Model, LockableMixin):
     id = database.Column(
         database.Integer,
         primary_key=True
@@ -210,24 +204,22 @@ class Election(database.Model):
         )
         '''
 
-class Vote(database.Model):
+class Vote(database.Model, LockableMixin):
     id = database.Column(database.Integer, primary_key=True)
-
-    voter_id = database.Column(
-        database.Integer,
-        database.ForeignKey('voter.id'),
-        nullable=False
-    )
-
+    
     position_id = database.Column(
-        database.Integer,
-        database.ForeignKey('position.id'),
+            database.Integer,
+            database.ForeignKey('position.id'),
+            nullable=False
+        )
+
+    voter_hash = database.Column(
+        database.String(66),
         nullable=False
     )
 
-    candidate_id = database.Column(
-        database.Integer,
-        database.ForeignKey('candidate.id'),
+    candidate_hash = database.Column(
+        database.String(66),
         nullable=False
     )
     
@@ -236,21 +228,67 @@ class Vote(database.Model):
         unique=True,
         nullable=False
     )
-
-    __table_args__ = (
-        database.UniqueConstraint('voter_id', 'position_id', name='unique_vote_per_position'),
-    )
     
-    voter = database.relationship('Voter', backref='votes')
-    candidate = database.relationship('Candidate', backref='votes')
+    position = database.relationship("Position", backref="votes")
+    
 
     def __repr__(self) -> str:
         return f'''
         Vote(
             id: {self.id}
-            voter_id: {self.voter_id}
             position_id: {self.position_id}
-            candidate_id: {self.candidate_id}
+            voter_hash: {self.voter_hash}
+            candidate_hash: {self.candidate_hash}
             vote_hash: {self.vote_hash} 
         )
         '''
+
+class Result(database.Model, LockableMixin):
+    id = database.Column(
+        database.Integer,
+        primary_key=True
+    )
+
+    position_id = database.Column(
+        database.Integer,
+        database.ForeignKey('position.id'),
+        nullable=False
+    )
+
+    candidate_hash = database.Column(
+        database.String(66),
+        database.ForeignKey('candidate.candidate_hash'),
+        nullable=False
+    )
+
+    vote_count = database.Column(
+        database.Integer,
+        default=0
+    )
+    
+    is_winner = database.Column(
+        database.Boolean,
+        nullable=False,
+        default=False
+    )
+    
+    position = database.relationship("Position", backref="results")
+
+    def __repr__(self) -> str:
+        return f'''
+        Result(
+            id: {self.id}
+            position_id: {self.position_id}
+            candidate_hash: {self.candidate_hash}
+            vote_count: {self.vote_count}
+            is_winner: {self.is_winner}
+        )
+        '''
+        
+register_lock_events(Otp)
+register_lock_events(Voter)
+register_lock_events(Candidate)
+register_lock_events(Position)
+register_lock_events(Election)
+register_lock_events(Vote)
+register_lock_events(Result)

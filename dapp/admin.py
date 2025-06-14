@@ -113,8 +113,15 @@ def publish_results():
             fetch_admin_wallet_address(),
             fetch_contract_address()
         )
-        status, tx_receipt , results = blockchain.publish()
-        session['results'] = results
+        status, tx_receipt = blockchain.publish()
+        if not status:
+            flash(f"Failed to publish results: {tx_receipt}")
+            return redirect(url_for('admin.admin_panel'))
+        
+        results = blockchain.group_candidates_by_position()
+        votes = blockchain.get_all_votes()        
+        print(f'Results:\n {results}')
+        print(f'Votes:\n {votes}')
         flash(f"Results published. Tx: {tx_receipt}")
     except Exception as e:
         flash(str(e), 'error')

@@ -186,8 +186,7 @@ def cast_vote(candidate_id):
 @main.route('/result')
 def result():
     'Show the election result if published'
-    results = session.get('results', None)
-    print(results)
+    results = []
     return render_template(
         'result.html',
         results = results
