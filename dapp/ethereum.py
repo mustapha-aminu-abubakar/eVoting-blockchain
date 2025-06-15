@@ -129,8 +129,8 @@ class Blockchain:
         try:
             tx = self._contract_instance.functions.vote(
                 int(position_id),
-                voter_hash,
-                candidate_hash
+                Web3.to_bytes(hexstr=voter_hash),
+                Web3.to_bytes(hexstr=candidate_hash)
             ).build_transaction({
                 "gasPrice": int(self.w3.eth.gas_price * 1.2),
                 "gas": 2000000,
@@ -219,14 +219,18 @@ class Blockchain:
     def get_onchain_results(self):
         results = {}
         for candidate in Candidate.query.all():
-            candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
-            count = self._contract_instance.functions.getVoteCounts(candidate.position_id, candidate_hash_bytes32).call()
+            # candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
+            count = self._contract_instance.functions.getVoteCounts(
+                candidate.position_id, 
+                Web3.to_bytes(candidate.candidate_hash)
+                ).call()
             results[candidate.id] = candidate.as_dict() 
             results[candidate.id]['vote_count'] = count
-            results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
+            # results[candidate.id]['candidate_hash'] = results[candidate.id]['candidate_hash'].hex()
             results[candidate.id]['position'] = candidate.position.position
             # print(f"Candidate {candidate_hash} ({candidate.id}) has {count} votes on-chain.")
         # print(results)
+        print(f'On-chain results: {results} \n\n')
         return results
     
     
@@ -242,7 +246,8 @@ class Blockchain:
             max_votes = max(c["vote_count"] for c in candidates)
             for c in candidates:
                 c["is_winner"] = c["vote_count"] == max_votes
-        print(f"Grouped candidates by position: {grouped}")
+        # print(f"Grouped candidates by position: {grouped}")
+        print(f'Grouped results {dict(grouped)}')
         return dict(grouped) 
     
     def get_all_votes(self):

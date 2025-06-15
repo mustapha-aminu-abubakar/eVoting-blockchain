@@ -52,12 +52,12 @@ BYTECODE = compiled_solidity['contracts']['evote.sol']['EVoting']['evm']['byteco
 
 # Deployment
 contract_instance = w3.eth.contract(abi=ABI, bytecode=BYTECODE)
-nonce = w3.eth.get_transaction_count(admin_wallet)
+nonce = w3.eth.get_transaction_count(admin_wallet, 'pending')
 
 sys.stdout.write(f'\r Building transaction...               ')
 tx = contract_instance.constructor().build_transaction(
     {
-        "gasPrice": w3.eth.gas_price,
+        "gasPrice": int(w3.eth.gas_price * 1.2),
         "chainId": sepolia,
         "from": admin_wallet,
         "nonce": nonce

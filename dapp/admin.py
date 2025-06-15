@@ -10,10 +10,11 @@ from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_election_result_restricted,
                             fetch_voters_by_candidate_id, publish_result,
                             count_total_votes_cast, count_total_possible_votes,
-                            fetch_all_positions, add_votes, add_results)
+                            fetch_all_positions, add_votes, add_results, fetch_all_candidates)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .models import Candidate, Voter
+from .db import database
 from .validator import (convert_to_unix_timestamp, count_max_vote_owner_id,
                         count_total_vote_cast, is_admin, sha256_hash,
                         validate_result_hash)
@@ -30,31 +31,32 @@ def admin_panel():
     if not is_admin(current_user):
         return redirect(url_for('auth.index'))
 
+    blockchain = Blockchain(
+        fetch_admin_wallet_address(),
+        fetch_contract_address()
+    )
     # Fetch all information
     election = fetch_election()
     voters = fetch_all_voters()
-    candidates = fetch_election_result_restricted()
+    # candidates = fetch_election_result_restricted()
     total_votes_possible = count_total_possible_votes()
-    total_votes_cast = count_total_votes_cast()
-    positions_count = len(fetch_all_positions())
+    total_votes_cast = blockchain.get_all_votes()
+    candidates = fetch_all_candidates()
+    positions = fetch_all_positions()
 
     # How many voted
     # total_vote_cast = count_total_vote_cast(voters)
     # Max vote and IDs
-    total_vote_count, max_vote_owner_id = count_max_vote_owner_id(candidates)
+    # total_vote_count, max_vote_owner_id = count_max_vote_owner_id(candidates)
 
     return render_template(
         'admin_panel.html',
         election_status=election.status,
         candidates=candidates,
-        max_vote_owner_id=max_vote_owner_id,
-        voters=voters,
-        total_voter=len(voters),
-        total_vote_count=total_vote_count,
+        total_vote_count=len(total_votes_cast),
         total_votes_possible=total_votes_possible,
-        positions_count=positions_count,
+        positions_count=len(positions),
         total_votes_cast=total_votes_cast,
-        count_votes_by_voter=count_votes_by_voter,
         # total_vote_cast=total_vote_cast
     )
 
@@ -114,42 +116,50 @@ def publish_results():
             fetch_admin_wallet_address(),
             fetch_contract_address()
         )
-        status, tx_receipt = blockchain.publish()
-        if not status:
-            flash(f"Failed to publish results: {tx_receipt}")
-            return redirect(url_for('admin.admin_panel'))
-        
-        results = blockchain.group_candidates_by_position()
+        status, tx_receipt = blockchain.publish()        
+        # results = blockchain.group_candidates_by_position()
         votes = blockchain.get_all_votes()    
         
-        for _, pos_result in results.items():
-            for cand in pos_result:
-                add_results(
-                    position_id=cand['position_id'],
-                    position=cand['position'],
-                    candidate_name=cand['name'],
-                    candidate_hash=cand['candidate_hash'],
-                    vote_count=cand['vote_count'],
-                    is_winner=cand['is_winner']
-                )
+        # print(f'Results:\n {results} \n')
+        print(f'Votes:\n {votes} \n')
+    except Exception as e:
+        flash(str(e), 'error')
         
-        for (position_id, voter_hash, candidate_hash, date_time_ts)  in votes:
+    # if results:
+    #     for _, pos_result in results.items():
+    #         for cand in pos_result:
+    #             add_results(
+    #                 position_id=cand['position_id'],
+    #                 position=cand['position'],
+    #                 candidate_name=cand['name'],
+    #                 candidate_hash=cand['candidate_hash'],
+    #                 vote_count=cand['vote_count'],
+    #                 is_winner=cand['is_winner']
+    #             )
+    if votes: 
+        for position_id, voter_hash, candidate_hash, date_time_ts, wallet_address  in votes:
+            print(f"""
+                  \n
+                  position_id {position_id}
+                  voter_hash {voter_hash}
+                  candidate_hash {candidate_hash}
+                  date_time_ts {date_time_ts}
+                  wallet_address {wallet_address}
+                  """)
             add_votes(
-                voter_hash=voter_hash,
-                candidate_hash=candidate_hash,
+                voter_hash=voter_hash.hex(),
+                candidate_hash=candidate_hash.hex(),
                 date_time_ts=date_time_ts,
-                position_id=position_id
+                position_id=position_id,
+                wallet_address=wallet_address
             )    
         
             
-        print(f'Results:\n {results}')
-        print(f'Votes:\n {votes}')
-        print(f'Votes model is_locked: {Voter.is_locked(session)}')
+        # Voter.lock_all(database.session)
+        print(f'Votes model is_locked: {Voter.is_locked(database.session)}')
         flash(f"Results published. Tx: {tx_receipt}")
-    except Exception as e:
-        flash(str(e), 'error')
-
-    return redirect(url_for('main.result'))
+    
+    return redirect(url_for('admin.publish_results'))
 
 @admin.route('/block_candidate/<int:candidate_id>')
 @login_required

@@ -49,15 +49,15 @@ def fetch_election_result_restricted():
     return Candidate.query.order_by(Candidate.vote_count.desc()).all()
 
 
-def fetch_voter_by_username_hash_hex(username_hash_hex):
+def fetch_voter_by_username_hash(username_hash):
     return Voter.query.filter_by(
-        username_hash_hex=username_hash_hex
+        username_hash=username_hash
     ).first()
 
 
-def fetch_OTP_by_username_hash_hex(username_hash_hex):
+def fetch_OTP_by_username_hash(username_hash):
     return Otp.query.filter_by(
-        username_hash_hex=username_hash_hex
+        username_hash=username_hash
     ).first()
 
 
@@ -86,6 +86,8 @@ def fetch_all_active_candidates():
         Candidate.candidate_status == AccountStatus.ACTIVE
     ).all()
 
+def fetch_all_candidates():
+    return Candidate.query.all()
 
 def fetch_candidate_by_id(candidate_id):
     return Candidate.query.filter_by(
@@ -161,9 +163,9 @@ def ban_voter_by_id(voter_id):
 # Check section
 
 
-def is_unverified_account(username_hash_hex):
+def is_unverified_account(username_hash):
     if Otp.query.filter_by(
-        username_hash_hex=username_hash_hex
+        username_hash=username_hash
     ).first():
         return True
     return False
@@ -215,14 +217,14 @@ def add_results(position_id, position, candidate_name, candidate_hash, vote_coun
     database.session.commit()
     return True, "Result added successfully."
 
-def add_votes(position_id, voter_hash, candidate_hash, date_time_ts):
-
+def add_votes(position_id, voter_hash, candidate_hash, date_time_ts, wallet_address):
     # Add the new vote
     new_vote = Vote(
         position_id=position_id,
         voter_hash=voter_hash,
         candidate_hash=candidate_hash,
-        date_time_ts=date_time_ts
+        date_time_ts=date_time_ts,
+        wallet_address=wallet_address
     )
     
     database.session.add(new_vote)
@@ -256,7 +258,6 @@ def add_new_vote_record(voter, candidate, vote_hash):
 
 def add_new_voter_signup(
         username_hash,
-        username_hash_hex,
         password_hash,
         email_encrypted,
         wallet_address,
@@ -266,7 +267,6 @@ def add_new_voter_signup(
     database.session.add(
         Voter(
             username_hash=username_hash,
-            username_hash_hex=username_hash_hex,
             password=password_hash,
             email_encrypted=email_encrypted,
             wallet_address=wallet_address,
@@ -275,7 +275,7 @@ def add_new_voter_signup(
     )
     database.session.add(
         Otp(
-            username_hash_hex=username_hash_hex,
+            username_hash=username_hash,
             otp=otp
         )
     )
@@ -286,8 +286,8 @@ def delete_OTP(otp):
     database.session.delete(otp)
     database.session.commit()
 
-def update_voter_wallet_by_username(username_hash_hex, new_wallet_address, new_encrypted_private_key):
-    voter = Voter.query.filter_by(username_hash_hex=username_hash_hex).first()
+def update_voter_wallet_by_username(username_hash, new_wallet_address, new_encrypted_private_key):
+    voter = Voter.query.filter_by(username_hash=username_hash).first()
     try:
         voter.wallet_address = new_wallet_address
         voter.private_key_encrypted = new_encrypted_private_key

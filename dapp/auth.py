@@ -1,12 +1,12 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, session
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from web3 import Web3
 
 from .credentials import EMAIL_SERVICE
 from .db_operations import (add_new_voter_signup, delete_OTP,
-                            fetch_OTP_by_username_hash_hex,
-                            fetch_voter_by_username_hash_hex,
+                            fetch_OTP_by_username_hash,
+                            fetch_voter_by_username_hash,
                             fetch_admin_wallet_address,
                             fetch_contract_address,
                             is_unverified_account,
@@ -15,6 +15,7 @@ from .db_operations import (add_new_voter_signup, delete_OTP,
                             is_wallet_address_already_exists,
                             is_email_already_exists,
                             update_voter_wallet_by_username)
+from .models import Candidate, Position
 from .mail_server import MailServer
 from .role import AccountStatus
 from .validator import (generate_opt, is_admin, sha256_hash, validate_signin,
@@ -22,11 +23,12 @@ from .validator import (generate_opt, is_admin, sha256_hash, validate_signin,
 from .ethereum import Blockchain
 from .cryptography import encrypt_object, decrypt_object
 from eth_account import Account
+from .db import database
 
 
 auth = Blueprint('auth', __name__)
 
-def fund_new_user_wallet(username_hash_hex):
+def fund_new_user_wallet(username_hash):
     # Create user wallet
     new_wallet = Account.create()
     address = new_wallet.address
@@ -35,7 +37,7 @@ def fund_new_user_wallet(username_hash_hex):
     print(f'New wallet private key: {private_key}') 
 
     user_wallet_update, e = update_voter_wallet_by_username(
-        username_hash_hex,
+        username_hash,
         address,
         encrypt_object(private_key)
     )
@@ -62,6 +64,11 @@ def index():
     If Voter session found redirect to candidate page
     '''
 
+    Candidate.lock_all(database.session)  # Lock all candidates to prevent modifications
+    Position.lock_all(database.session)  # Lock all positions to prevent modifications
+    if Candidate.is_locked(database.session):    
+        print('Candidates are locked for modification')
+    
     if not current_user.is_authenticated:
         return render_template('index.html')
 
@@ -85,7 +92,7 @@ def signin_post():
     username = request.form.get('username').strip()
     password = request.form.get('pwd').strip()
     # Username HASH
-    username_hash_hex = Web3.keccak(text=username).hex()
+    username_hash = Web3.keccak(text=username).hex()
 
     # Validate the inputs
     valid, msg = validate_signin(username, password)
@@ -94,7 +101,7 @@ def signin_post():
         return redirect(url_for('auth.index'))
 
     # Get the voter details
-    voter = fetch_voter_by_username_hash_hex(username_hash_hex)
+    voter = fetch_voter_by_username_hash(username_hash)
 
     # If voter not found in DB
     if not voter:
@@ -102,8 +109,8 @@ def signin_post():
         return redirect(url_for('auth.signup'))
 
     # If OTP is not verified
-    if is_unverified_account(username_hash_hex):
-        return render_template('otp.html', username_hash_hex=username_hash_hex)
+    if is_unverified_account(username_hash):
+        return render_template('otp.html', username_hash=username_hash)
 
     # Input password check
     if not check_password_hash(voter.password, password):
@@ -117,7 +124,7 @@ def signin_post():
 
     # If the user blocked
     if voter.voter_status == AccountStatus.BLOCKED:
-        flash(f'{username_hash_hex} is blocked by ADMIN')
+        flash(f'{username_hash} is blocked by ADMIN')
         return render_template('error.html', error_msg='BLOCKED')
 
     # Start login session
@@ -145,9 +152,7 @@ def signup_post():
     # wallet_address = request.form.get('walletaddr').strip()
     
     # Create hashs
-    username_hash = Web3.keccak(text=username)
-    username_hash_hex = Web3.keccak(text=username).hex()
-    # print(f'--------------Username Hash Hex: {username_hash_hex}---------------------')
+    username_hash = Web3.keccak(text=username).hex()
     password_hash = generate_password_hash(password)
 
     # Validate inputs
@@ -181,7 +186,7 @@ def signup_post():
 
         if EMAIL_SERVICE:
             mail_agent = MailServer()
-            status = mail_agent.send_mail(username, email, otp)
+            status = mail_agent.send_mail(email, otp)
             print(f'Otp email to {email}: {status}')
             flash(f'Enter the code sent to {email}')
         
@@ -196,7 +201,6 @@ def signup_post():
         # Add new user off-chain to DB
         add_new_voter_signup(
             username_hash,
-            username_hash_hex,
             password_hash,
             encrypt_object(email),
             '',
@@ -214,31 +218,28 @@ def signup_post():
         # _, status = blockchain.fund_wallet(address)
         # print(status)
 
-        return render_template('otp.html', username_hash_hex=username_hash_hex)
+        return render_template('otp.html', username_hash=username_hash)
 
 
-@auth.route('/verify_otp/<string:username_hash_hex>', methods=['POST'])
-def verify_otp_post(username_hash_hex):
+@auth.route('/verify_otp/<string:username_hash>', methods=['POST'])
+def verify_otp_post(username_hash):
     'OTP verification POST request'
 
     # Get input OTP
     user_otp = request.form.get('otp').strip()
 
-    otp = fetch_OTP_by_username_hash_hex(username_hash_hex)
+    otp = fetch_OTP_by_username_hash(username_hash)
 
     # If not such OTP exist
     if not otp:
         return redirect(url_for('auth.index'))
 
-    # OTP match
-    # if check_password_hash(otp.otp, user_otp):
-    # print(f'OTP: {otp}')
-    # print(f'User OTP: {user_otp}')
+    
     if check_password_hash(otp.otp, user_otp):   
         delete_OTP(otp)
-        fund_new_user_wallet(username_hash_hex)
+        fund_new_user_wallet(username_hash)
         flash('Voter registration complete')
         return redirect(url_for('auth.index'))
 
     flash('Incorrect OTP')
-    return render_template('otp.html', username_hash_hex=username_hash_hex)
+    return render_template('otp.html', username_hash=username_hash)

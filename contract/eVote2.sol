@@ -8,6 +8,7 @@ contract EVoting {
         bytes32 voterHash;
         bytes32 candidateHash;
         uint timestamp;
+        address voterAdd;
     }
     uint256 public startVotingTime;
     uint256 public endVotingTime;
@@ -79,7 +80,7 @@ contract EVoting {
         hasVoted[positionId][voterHash] = true;
         voterTimestamps[positionId][voterHash] = block.timestamp;
         totalVotes++;
-        votesCast.push(Vote(positionId, voterHash, candidateHash, block.timestamp));
+        votesCast.push(Vote(positionId, voterHash, candidateHash, block.timestamp, msg.sender));
     }
 
     function getVoteCounts(uint positionId, bytes32 candidateHash) public view returns (uint) {

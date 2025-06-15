@@ -50,20 +50,13 @@
             <tr>
                 <th>Username</th>
                 <th>Name</th>
-                <th>
-                    Vote count
-                    <span class="badge">
-                        {{ total_vote_count }}
-                    </span>
-                </th>
                 <th>Admin control</th>
             </tr>
         </thead>
         <tbody>
 
             {% for candidate in candidates %}
-            <tr class="{{ 'success' if candidate.id in max_vote_owner_id else 'active' }}">
-                <td>{{ candidate.username }}</td>
+            <tr>
                 <td>{{ candidate.name }}</td>                
                 <td>{{ candidate.position.position }}</td>
                 <td>
@@ -101,7 +94,7 @@
         </thead>
         <tbody>
             {% for voter in voters %}
-            <tr class="{{ 'success' if voter.vote_status else 'active' }}">
+            <tr class="{{ 'success' if voter.voter_status else 'active' }}">
                 <td>{{ voter.username_hash }}</td>
                 <td>{{ voter.wallet_address }}</td>
                 <td>

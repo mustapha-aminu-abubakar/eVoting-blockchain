@@ -9,7 +9,7 @@ class Otp(database.Model, LockableMixin):
         primary_key=True
     )
 
-    username_hash_hex = database.Column(
+    username_hash = database.Column(
         database.String(64),
         unique=True,
         nullable=False
@@ -24,7 +24,7 @@ class Otp(database.Model, LockableMixin):
         return f'''
         OTPs (
             id: {self.id}
-            username_hash_hex: {self.username_hash_hex}
+            username_hash_hex: {self.username_hash}
             otp: {self.otp}
         )
         '''
@@ -41,12 +41,6 @@ class Voter(database.Model, LockableMixin, UserMixin):
         nullable=False
     )
     
-    username_hash_hex = database.Column(
-        database.String(66),  
-        unique=True,
-        nullable=False
-    )
-
     email_encrypted = database.Column(
         database.String(88),
         nullable = False,
@@ -226,6 +220,12 @@ class Vote(database.Model, LockableMixin):
     date_time_ts = database.Column(
         database.Integer,
         nullable=False,
+    )
+    
+    wallet_address = database.Column(
+        database.String(64),
+        nullable=False,
+        unique=False
     )
     
     position = database.relationship("Position", backref="votes")

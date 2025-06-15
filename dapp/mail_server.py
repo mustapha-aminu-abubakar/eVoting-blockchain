@@ -12,7 +12,7 @@ Subject: eVoting System
 
 Your one time password: """
 
-    def send_mail(self, username, receiver_email, OTP):
+    def send_mail(self, receiver_email, OTP):
         #receiver_email = "oloriebiridwan@gmail.com"
         receiver_otp = self._message + OTP
 

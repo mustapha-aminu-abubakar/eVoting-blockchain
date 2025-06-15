@@ -70,8 +70,8 @@ def positions():
     for position in positions:
         try:
         # Check if user has voted for this position
-            status = blockchain.has_user_voted(position.id, current_user.username_hash)
-            has_voted_for_position[position.id] = True
+            status = blockchain.has_user_voted(position.id, Web3.to_bytes(hexstr=current_user.username_hash))
+            has_voted_for_position[position.id] = status 
         except Exception as e:
             flash(f'Error checking vote status for position {position.position}: {str(e)}')
             has_voted_for_position[position.id] = False
@@ -86,7 +86,7 @@ def positions():
     
 @main.route('/positions/<int:position_id>')
 @login_required
-def position(position_id, has_voted_for_position_id=False):
+def position(position_id):
     'Shows the contested position details'
 
     # Access deny for ADMIN
@@ -98,14 +98,19 @@ def position(position_id, has_voted_for_position_id=False):
         fetch_contract_address()
     )
     
+    status = blockchain.has_user_voted(position_id, Web3.to_bytes(hexstr=current_user.username_hash))
+    if status: 
+        flash('You have already voted for this position')
+        return redirect(url_for('main.positions'))
+
+    
     position = fetch_position_by_id(position_id)
     candidates = {}
     candidate_hashes = blockchain.get_candidates(position_id)
     print(f'Candidate hashes for position {position_id}: {candidate_hashes}')
     for _hash in candidate_hashes:
         # print(f'Candidate hash: {Web3.to_bytes(hexstr=_hash)}')
-        candidate_hash_bytes = Web3.to_bytes(hexstr=_hash)
-        candidates[_hash] = fetch_candidate_by_hash(candidate_hash_bytes)
+        candidates[_hash] = fetch_candidate_by_hash(_hash)
     print(f'candidates: {candidates}')
     # has_voted_for_position_id = request.args.get('has_voted_for_position_id', default=False, type=lambda v: v.lower() == 'true')
 
@@ -117,7 +122,6 @@ def position(position_id, has_voted_for_position_id=False):
         'candidates.html',
         user=current_user,
         position=position,
-        has_voted_for_position_id=has_voted_for_position_id,
         candidates=candidates
     )
     
@@ -137,15 +141,15 @@ def cast_vote(candidate_id):
 
     # Get candidate and voter
     selected_candidate = fetch_candidate_by_id(candidate_id)
-    voter = fetch_voter_by_id(current_user.id)
-    vote_hash = Web3.keccak(text=f'{voter.id}-{selected_candidate.id}')
+    # voter = fetch_voter_by_id(current_user.id)
+    # vote_hash = Web3.keccak(text=f'{current_user.id}-{selected_candidate.id}')
     
     # Sending transaction for vote cast
-    blockchain = Blockchain(voter.wallet_address, fetch_contract_address())
+    blockchain = Blockchain(current_user.wallet_address, fetch_contract_address())
     status, tx_msg = blockchain.vote(
         private_key, 
         selected_candidate.position_id, 
-        voter.username_hash, 
+        current_user.username_hash, 
         selected_candidate.candidate_hash
         )
     print(status, tx_msg)
@@ -153,9 +157,8 @@ def cast_vote(candidate_id):
     # Check if user has already voted a candidate for this position
         flash(f'Vote successful: {tx_msg}')
         print(f'''
-        voter hash: {voter.username_hash}
+        voter hash: {current_user.username_hash}
         candidate hash: {selected_candidate.candidate_hash}
-        vote_hash: {vote_hash}
         private_key: {private_key}
         ''')
         # _, msg = add_new_vote_record(voter, selected_candidate, vote_hash)

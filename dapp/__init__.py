@@ -40,7 +40,7 @@ def init_candidates(path, db, Candidate):
                 id=row[0], 
                 name=row[1], 
                 position_id=row[2],
-                candidate_hash=candidate_hash)
+                candidate_hash=candidate_hash.hex())
             )
         db.session.commit()
 
@@ -61,11 +61,7 @@ def setup_admin(path, db, Users, Election):
         admin_user_details = json.loads(json_file.read())
         db.session.add(
             Users(
-                # username_hash=hashlib.sha256(
-                #     bytes(admin_user_details["username"], "UTF-8")
-                # ).hexdigest(),
-                username_hash = Web3.keccak(text=admin_user_details["username"]),
-                username_hash_hex=Web3.keccak(text=admin_user_details["username"]).hex(),
+                username_hash = Web3.keccak(text=admin_user_details["username"]).hex(),
                 password=generate_password_hash(admin_user_details["passwd"]), 
                 wallet_address=admin_user_details["wallet"],
                 voter_status=False,
@@ -79,7 +75,7 @@ def setup_admin(path, db, Users, Election):
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain72.sqlite"
+    DB_NAME = "offchain75.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"
