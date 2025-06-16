@@ -116,16 +116,18 @@ def publish_results():
             fetch_admin_wallet_address(),
             fetch_contract_address()
         )
-        status, tx_receipt = blockchain.publish()        
-        # results = blockchain.group_candidates_by_position()
-        votes = blockchain.get_all_votes()    
-        
-        # print(f'Results:\n {results} \n')
-        print(f'Votes:\n {votes} \n')
+        status, tx_receipt = blockchain.publish() 
     except Exception as e:
         flash(str(e), 'error')
-        
-    # if results:
+    # if status:       
+    results = blockchain.group_candidates_by_position()
+    votes = blockchain.get_all_votes()    
+
+    print(f'Results:\n {results} \n')
+    print(f'Votes:\n {votes} \n')
+    
+    if results:
+        add_results(results)
     #     for _, pos_result in results.items():
     #         for cand in pos_result:
     #             add_results(
@@ -137,22 +139,15 @@ def publish_results():
     #                 is_winner=cand['is_winner']
     #             )
     if votes: 
-        for position_id, voter_hash, candidate_hash, date_time_ts, wallet_address  in votes:
-            print(f"""
-                  \n
-                  position_id {position_id}
-                  voter_hash {voter_hash}
-                  candidate_hash {candidate_hash}
-                  date_time_ts {date_time_ts}
-                  wallet_address {wallet_address}
-                  """)
-            add_votes(
-                voter_hash=voter_hash.hex(),
-                candidate_hash=candidate_hash.hex(),
-                date_time_ts=date_time_ts,
-                position_id=position_id,
-                wallet_address=wallet_address
-            )    
+            # print(f"""
+            #       \n
+            #       position_id {position_id}
+            #       voter_hash {voter_hash}
+            #       candidate_hash {candidate_hash}
+            #       date_time_ts {date_time_ts}
+            #       wallet_address {wallet_address}
+            #       """)
+        add_votes(votes)    
         
             
         # Voter.lock_all(database.session)

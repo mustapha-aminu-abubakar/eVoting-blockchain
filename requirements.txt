@@ -70,17 +70,17 @@ json5
 jsonpointer 
 jsonschema 
 jsonschema-specifications 
-jupyter-client 
-jupyter-core 
-jupyter-events 
-jupyter-lsp 
-jupyter-server 
-jupyter-server-mathjax 
-jupyter-server-terminals 
-jupyterlab 
-jupyterlab-git 
-jupyterlab-pygments 
-jupyterlab-server 
+# jupyter-client 
+# jupyter-core 
+# jupyter-events 
+# jupyter-lsp 
+# jupyter-server 
+# jupyter-server-mathjax 
+# jupyter-server-terminals 
+# jupyterlab 
+# jupyterlab-git 
+# jupyterlab-pygments 
+# jupyterlab-server 
 kiwisolver 
 MarkupSafe 
 matplotlib 
@@ -165,8 +165,8 @@ tomli
 toolz 
 # torch 
 tornado 
-traitlets 
-triton 
+# traitlets 
+# triton 
 types-python-dateutil 
 types-requests 
 typing-extensions 

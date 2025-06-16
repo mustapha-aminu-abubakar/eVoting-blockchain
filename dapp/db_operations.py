@@ -202,32 +202,35 @@ def has_voted_for_position(voter_id, position_id):
 # Add/Delete section
 
 
-def add_results(position_id, position, candidate_name, candidate_hash, vote_count, is_winner):
+def add_results(results):
     # Check if the result already exists
     # Add the new result
-    new_result = Vote(
+    # position_id, position, candidate_name, candidate_hash, vote_count, is_winner
+    new_results = [Vote(
         position_id=position_id,
         position=position,
         candidate_name=candidate_name,
         candidate_hash=candidate_hash,
         vote_count=vote_count,
         is_winner=is_winner
-    )
-    database.session.add(new_result)
+    ) for position_id, position, candidate_name, candidate_hash, vote_count, is_winner in results ]
+    database.session.add_all(new_results)
     database.session.commit()
     return True, "Result added successfully."
 
-def add_votes(position_id, voter_hash, candidate_hash, date_time_ts, wallet_address):
+def add_votes(votes):
     # Add the new vote
-    new_vote = Vote(
+    # position_id, voter_hash, candidate_hash, date_time_ts, wallet_address
+    new_votes = [Vote(
         position_id=position_id,
         voter_hash=voter_hash,
         candidate_hash=candidate_hash,
         date_time_ts=date_time_ts,
-        wallet_address=wallet_address
-    )
+        wallet_address=wallet_address)
+        for position_id, voter_hash, candidate_hash, date_time_ts, wallet_address in votes
+    ]
     
-    database.session.add(new_vote)
+    database.session.add_all(new_votes)
     database.session.commit()
     return True, "Vote added successfully."
 
