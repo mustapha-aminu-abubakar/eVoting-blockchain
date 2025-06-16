@@ -144,6 +144,14 @@ def fetch_vote_by_candidate_id(candidate_id):
     return Vote.query.filter_by(
         candidate_id=candidate_id
     ).all()
+
+def fetch_all_votes():
+    return Vote.query.all()
+
+def fetch_votes_by_candidate_hash(candidate_hash):
+    return Vote.query.filter_by(
+        candidate_hash=candidate_hash
+    )
 # Block section
 
 
@@ -203,17 +211,19 @@ def has_voted_for_position(voter_id, position_id):
 
 
 def add_results(results):
-    # Check if the result already exists
-    # Add the new result
-    # position_id, position, candidate_name, candidate_hash, vote_count, is_winner
-    new_results = [Vote(
-        position_id=position_id,
-        position=position,
-        candidate_name=candidate_name,
-        candidate_hash=candidate_hash,
-        vote_count=vote_count,
-        is_winner=is_winner
-    ) for position_id, position, candidate_name, candidate_hash, vote_count, is_winner in results ]
+    new_results = []
+
+    for position, candidates in results.items():
+        for candidate in candidates:
+            result_entry = Result(
+                position_id=candidate['position_id'],
+                position=candidate['position'],
+                candidate_name=candidate['name'],
+                candidate_hash=candidate['candidate_hash'],
+                vote_count=candidate['vote_count'],
+                is_winner=candidate['is_winner']
+            )
+            new_results.append(result_entry)
     database.session.add_all(new_results)
     database.session.commit()
     return True, "Result added successfully."
@@ -223,8 +233,8 @@ def add_votes(votes):
     # position_id, voter_hash, candidate_hash, date_time_ts, wallet_address
     new_votes = [Vote(
         position_id=position_id,
-        voter_hash=voter_hash,
-        candidate_hash=candidate_hash,
+        voter_hash=voter_hash.hex(),
+        candidate_hash=candidate_hash.hex(),
         date_time_ts=date_time_ts,
         wallet_address=wallet_address)
         for position_id, voter_hash, candidate_hash, date_time_ts, wallet_address in votes

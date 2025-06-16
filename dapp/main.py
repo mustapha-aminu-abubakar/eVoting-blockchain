@@ -14,11 +14,12 @@ from .db_operations import (add_new_vote_record, fetch_all_active_candidates,
                             fetch_candidate_by_position_id,
                             has_voted_for_position,
                             fetch_candidate_by_hash,
-                            fetch_all_results, fetch_vote_by_candidate_id)
+                            fetch_all_results, fetch_vote_by_candidate_id, fetch_votes_by_candidate_hash)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .validator import build_vote_cast_hash, count_max_vote_owner_id, is_admin, sha256_hash
 from .cryptography import encrypt_object, decrypt_object
+from datetime import datetime
 
 
 main = Blueprint('main', __name__)
@@ -223,31 +224,14 @@ def result():
         results = results
     )
     
-@main.route('/results/<int:candidate_id>')
-def result_by_candidate(candidate_id):
-    'Show the election result by candidate ID'
-    votes = fetch_vote_by_candidate_id(candidate_id)
+@main.route('/results/<candidate_hash>')
+def result_by_candidate(candidate_hash):
+    'Show the election result by candidate hash'
+    votes = fetch_votes_by_candidate_hash(candidate_hash)
+    candidate = fetch_candidate_by_hash(candidate_hash)
     return render_template(
-        'result_by_candidate.html',
+        'votes_by_candidate.html',
         votes=votes,
+        candidate=candidate,
+        ts_to_dt = datetime.utcfromtimestamp
     )    
-    #
-    # If not public
-    # election = fetch_election()
-    # if election.status == ElectionStatus.PRIVATE:
-    #     flash('The result has not been released yet')
-    #     return redirect(url_for('auth.index'))
-
-    # Find the max vote count and IDs of the winners
-    # candidates = fetch_election_result()
-    # _, max_vote_owner_id = count_max_vote_owner_id(candidates)
-    
-    # blockchain = Blockchain(
-    #     fetch_admin_wallet_address(),
-    #     fetch_contract_address()
-    # )
-    # status, _, result = blockchain.publish()
-    # if not status:
-    #     flash('The result has not been released yet')
-
-    

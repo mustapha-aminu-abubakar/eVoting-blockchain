@@ -1,0 +1,28 @@
+{% extends "common.html" %} {% block content %}
+<h2>Votes for {{ candidate.name }}
+    <a href="{{ url_for('auth.index') }}">
+        <button class='btn btn-default pull-right'>
+            Back
+        </button>
+    </a>
+</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Voter hash</th>
+            <th>Wallet address</th>
+            <th>Date time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vote in votes %}
+            <tr>
+                <td> {{ vote.voter_hash }} </td>
+                <td> {{ vote.wallet_address }} </td>
+                <td> {{ ts_to_dt(vote.date_time_ts) }} UTC </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

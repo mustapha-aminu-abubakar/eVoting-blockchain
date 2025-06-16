@@ -10,7 +10,8 @@ from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_election_result_restricted,
                             fetch_voters_by_candidate_id, publish_result,
                             count_total_votes_cast, count_total_possible_votes,
-                            fetch_all_positions, add_votes, add_results, fetch_all_candidates)
+                            fetch_all_positions, add_votes, add_results, fetch_all_candidates,
+                            fetch_all_votes)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .models import Candidate, Voter
@@ -40,7 +41,8 @@ def admin_panel():
     voters = fetch_all_voters()
     # candidates = fetch_election_result_restricted()
     total_votes_possible = count_total_possible_votes()
-    total_votes_cast = blockchain.get_all_votes()
+    # total_votes_cast = blockchain.get_all_votes()
+    votes = fetch_all_votes
     candidates = fetch_all_candidates()
     positions = fetch_all_positions()
 
@@ -53,10 +55,10 @@ def admin_panel():
         'admin_panel.html',
         election_status=election.status,
         candidates=candidates,
-        total_vote_count=len(total_votes_cast),
+        total_vote_count=len(votes),
         total_votes_possible=total_votes_possible,
         positions_count=len(positions),
-        total_votes_cast=total_votes_cast,
+        votes=votes,
         # total_vote_cast=total_vote_cast
     )
 
@@ -110,7 +112,8 @@ def admin_panel():
 def publish_results():
     if not is_admin(current_user):
         return redirect(url_for('auth.index'))
-
+    results=[]
+    votes=[]
     try:
         blockchain = Blockchain(
             fetch_admin_wallet_address(),
@@ -119,35 +122,22 @@ def publish_results():
         status, tx_receipt = blockchain.publish() 
     except Exception as e:
         flash(str(e), 'error')
-    # if status:       
-    results = blockchain.group_candidates_by_position()
-    votes = blockchain.get_all_votes()    
+    if status:       
+        results = blockchain.group_candidates_by_position()
+        votes = blockchain.get_all_votes()    
 
     print(f'Results:\n {results} \n')
     print(f'Votes:\n {votes} \n')
     
-    if results:
+    try:
         add_results(results)
-    #     for _, pos_result in results.items():
-    #         for cand in pos_result:
-    #             add_results(
-    #                 position_id=cand['position_id'],
-    #                 position=cand['position'],
-    #                 candidate_name=cand['name'],
-    #                 candidate_hash=cand['candidate_hash'],
-    #                 vote_count=cand['vote_count'],
-    #                 is_winner=cand['is_winner']
-    #             )
-    if votes: 
-            # print(f"""
-            #       \n
-            #       position_id {position_id}
-            #       voter_hash {voter_hash}
-            #       candidate_hash {candidate_hash}
-            #       date_time_ts {date_time_ts}
-            #       wallet_address {wallet_address}
-            #       """)
+    except Exception as e:
+        print(f'Could not enter results: {e}')
+        
+    try: 
         add_votes(votes)    
+    except Exception as e:
+        print(f'Could not enter votes: {e}')
         
             
         # Voter.lock_all(database.session)

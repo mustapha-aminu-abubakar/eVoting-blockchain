@@ -75,7 +75,7 @@ def setup_admin(path, db, Users, Election):
 
 def create_app():
     WORKING_DIRECTORY = os.getcwd()
-    DB_NAME = "offchain75.sqlite"
+    DB_NAME = "offchain77.sqlite"
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv"
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv"
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json"

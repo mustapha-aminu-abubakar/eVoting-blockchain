@@ -238,8 +238,8 @@ class Vote(database.Model, LockableMixin):
             position_id: {self.position_id}
             voter_hash: {self.voter_hash}
             candidate_hash: {self.candidate_hash}
-            vote_hash: {self.vote_hash} 
             date_time_ts: {self.date_time_ts}
+            wallet_address: {self.wallet_address}
         )
         '''
 
@@ -281,6 +281,8 @@ class Result(database.Model, LockableMixin):
         nullable=False,
         default=False
     )
+    
+    candidate = database.relationship("Candidate", backref="results")
     
 
     def __repr__(self) -> str:

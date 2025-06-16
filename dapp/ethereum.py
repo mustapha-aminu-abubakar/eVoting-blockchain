@@ -222,7 +222,7 @@ class Blockchain:
             # candidate_hash_bytes32 = candidate.candidate_hash  # assuming you stored the hash
             count = self._contract_instance.functions.getVoteCounts(
                 candidate.position_id, 
-                Web3.to_bytes(candidate.candidate_hash)
+                Web3.to_bytes(hexstr=candidate.candidate_hash)
                 ).call()
             results[candidate.id] = candidate.as_dict() 
             results[candidate.id]['vote_count'] = count
