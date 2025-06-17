@@ -110,6 +110,26 @@
         </tbody>
     </table>
 
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Transaction hash</th>
+                <th>Sender wallet</th>
+                <th>Gas used</th>
+                <th>Date time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in txns%}
+                <tr class="{% if txn.status %}success{% else %}active{% endif %}">
+                    <td>{{ txn.txn_hash }}</td>
+                    <td>{{ txn.sender }}</td>
+                    <td>{{ txn.gas }}</td>
+                    <td>{{ ts_to_dt(txn.txn_ts) }} UTC</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 <script>
     document.getElementById('tz').value = Intl.DateTimeFormat().resolvedOptions().timeZone;

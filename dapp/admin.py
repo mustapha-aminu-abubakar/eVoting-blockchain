@@ -11,7 +11,7 @@ from .db_operations import (ban_candidate_by_id, ban_voter_by_id,
                             fetch_voters_by_candidate_id, publish_result,
                             count_total_votes_cast, count_total_possible_votes,
                             fetch_all_positions, add_votes, add_results, fetch_all_candidates,
-                            fetch_all_votes)
+                            fetch_all_votes, fetch_all_transactions)
 from .ethereum import Blockchain
 from .role import ElectionStatus
 from .models import Candidate, Voter
@@ -19,6 +19,7 @@ from .db import database
 from .validator import (convert_to_unix_timestamp, count_max_vote_owner_id,
                         count_total_vote_cast, is_admin, sha256_hash,
                         validate_result_hash)
+from datetime import datetime
 
 admin = Blueprint('admin', __name__)
 
@@ -45,6 +46,7 @@ def admin_panel():
     votes = fetch_all_votes
     candidates = fetch_all_candidates()
     positions = fetch_all_positions()
+    txns = fetch_all_transactions()
 
     # How many voted
     # total_vote_cast = count_total_vote_cast(voters)
@@ -55,10 +57,12 @@ def admin_panel():
         'admin_panel.html',
         election_status=election.status,
         candidates=candidates,
-        total_vote_count=len(votes),
+        txns=txns,
+        # total_vote_count=len(votes),
         total_votes_possible=total_votes_possible,
-        positions_count=len(positions),
+        # positions_count=len(positions),
         votes=votes,
+        ts_to_dt=datetime.utcfromtimestamp
         # total_vote_cast=total_vote_cast
     )
 

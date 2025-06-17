@@ -1,6 +1,8 @@
 from flask_login import UserMixin
 from .mixins import LockableMixin, register_lock_events  # <- import
 from dapp.db import database
+from datetime import datetime
+import time
 
 
 class Otp(database.Model, LockableMixin):
@@ -297,6 +299,43 @@ class Result(database.Model, LockableMixin):
             candidate_name: {self.candidate_name}
         )
         '''
+
+class Transaction(database.Model, LockableMixin):
+    txn_hash = database.Column(
+        database.String(66),
+        primary_key=True
+    )
+    
+    status = database.Column(
+        database.Boolean,
+        default=False
+    )
+    
+    sender = database.Column(
+        database.String(66)
+    )
+    
+    gas = database.Column(
+        database.Integer
+    )
+    
+    txn_ts = database.Column(
+        database.Integer,
+        nullable=False,
+        default=int(time.time())
+    )
+    
+    def __repr__(self) -> str:
+        return f'''
+            Transaction(
+                transaction_hash: {self.txn_hash}
+                status: {self.status}
+                sender wallet: {self.sender}
+                gas used: {self.gas}
+                transaction timestamp: {self.txn_ts}
+            )
+            '''
+            
         
 register_lock_events(Otp)
 register_lock_events(Voter)
@@ -305,3 +344,4 @@ register_lock_events(Position)
 register_lock_events(Election)
 register_lock_events(Vote)
 register_lock_events(Result)
+register_lock_events(Transaction)

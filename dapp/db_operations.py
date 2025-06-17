@@ -1,5 +1,5 @@
 from .db import database
-from .models import Candidate, Election, Otp, Vote, Voter, Position, Result
+from .models import Candidate, Election, Otp, Vote, Voter, Position, Result, Transaction
 from .role import AccountStatus, UserRole
 
 # Retrieve section
@@ -152,6 +152,9 @@ def fetch_votes_by_candidate_hash(candidate_hash):
     return Vote.query.filter_by(
         candidate_hash=candidate_hash
     )
+    
+def fetch_all_transactions():
+    return Transaction.query.all()
 # Block section
 
 
@@ -292,6 +295,16 @@ def add_new_voter_signup(
             otp=otp
         )
     )
+    database.session.commit()
+
+def add_txn(txn_hash, status, sender, gas):
+    new_txn = Transaction(
+        txn_hash=txn_hash,
+        status=status,
+        sender=sender,
+        gas=gas
+    )
+    database.session.add(new_txn)
     database.session.commit()
 
 

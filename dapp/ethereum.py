@@ -8,7 +8,7 @@ from web3 import Web3
 from dotenv import load_dotenv
 from collections import defaultdict
 from .credentials import WEB3_PROVIDER_URL
-from .db_operations import get_offchain_results
+from .db_operations import get_offchain_results, add_txn
 from .models import Candidate, Position
 
 load_dotenv()
@@ -192,8 +192,20 @@ class Blockchain:
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         # print(" Waiting for Tx receipt...")
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
-        print(f"{bool(tx_receipt['status'])} gasused: {tx_receipt['gasUsed']}")
-        # return tx_receipt['transactionHash'].hex()
+        add_txn(tx_receipt['transactionHash'].hex(),
+                bool(tx_receipt['status']),
+                tx_receipt['from'],
+                int(tx_receipt['gasUsed']))
+        # print(f"{bool(tx_receipt['status'])} gasused: {tx_receipt['gasUsed']}")
+        print(tx_receipt)
+        # AttributeDict(
+        # {'blockHash': HexBytes('0x51e8a2e2b1d1f095d1e2e9df37211252df596f9a566509d930aaf48fd6785079'), 
+        # 'blockNumber': 8566631, 'contractAddress': None, 'cumulativeGasUsed': 8433315, 
+        # 'effectiveGasPrice': 13822442, 'from': '0x6C0aFB8EbF46bEDf452d6eA73A6C9E3afBF66bA5', 
+        # 'gasUsed': 34260, 'logs': [], 'logsBloom': HexBytes('0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'), 
+        # 'status': 1, 'to': '0xd7B62Ae4E9C442D4611449bb3f57Cd8B25D1b210', 
+        # 'transactionHash': HexBytes('0xd641e321c64b7e22211a84b63a1d6f193c4bcdeb0fb2cf1051fa7b3ca19a1fd5'), 
+        # 'transactionIndex': 64, 'type': 0})
         return tx_receipt
 
     def fund_wallet(self, to_address):
