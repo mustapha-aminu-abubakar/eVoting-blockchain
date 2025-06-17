@@ -8,8 +8,12 @@ from web3 import Web3
 from dotenv import load_dotenv
 from collections import defaultdict
 from .credentials import WEB3_PROVIDER_URL
-from .db_operations import get_offchain_results, add_txn
+from .db_operations import (get_offchain_results, add_txn, update_voter_wallet_by_username, 
+                            fetch_admin_wallet_address, fetch_contract_address)
+from .cryptography import encrypt_object
 from .models import Candidate, Position
+from eth_account import Account
+
 
 load_dotenv()
 ADMIN_PRIVATE_KEY = os.getenv("ADMIN_PRIVATE_KEY")
@@ -309,4 +313,29 @@ class Blockchain:
             return self._contract_instance.functions.hasUserVoted(position_id, voter_hash).call()
         except Exception as e:
             return (False, str(e))    
+
+
+def fund_new_user_wallet(wallet, contract_add, username_hash):
+    # Create user wallet
+    new_wallet = Account.create()
+    address = new_wallet.address
+    private_key = new_wallet.key.hex()  
+    print(f'New wallet address: {address}')
+    print(f'New wallet private key: {private_key}') 
+
+    blockchain = Blockchain(
+        wallet,
+        contract_add
+    )
     
+    status, msg = blockchain.fund_wallet(address)
+    
+    if status:    
+        user_wallet_update, e = update_voter_wallet_by_username(
+            username_hash,
+            address,
+            encrypt_object(private_key)
+        )
+    
+    return (user_wallet_update, e)
+      

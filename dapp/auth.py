@@ -20,41 +20,13 @@ from .mail_server import MailServer
 from .role import AccountStatus
 from .validator import (generate_opt, is_admin, sha256_hash, validate_signin,
                         validate_signup)
-from .ethereum import Blockchain
+from .ethereum import Blockchain, fund_new_user_wallet
 from .cryptography import encrypt_object, decrypt_object
-from eth_account import Account
 from .db import database
 
 
 auth = Blueprint('auth', __name__)
 
-def fund_new_user_wallet(username_hash):
-    # Create user wallet
-    new_wallet = Account.create()
-    address = new_wallet.address
-    private_key = new_wallet.key.hex()  
-    print(f'New wallet address: {address}')
-    print(f'New wallet private key: {private_key}') 
-
-    user_wallet_update, e = update_voter_wallet_by_username(
-        username_hash,
-        address,
-        encrypt_object(private_key)
-    )
-    
-    if not user_wallet_update:
-        flash(f'Error updating wallet: {e}')
-        return redirect(url_for('auth.index'))
-    
-    # Create blokchain object
-    blockchain = Blockchain(
-        fetch_admin_wallet_address(),
-        fetch_contract_address()
-    )
-
-    # Fund wallet
-    _, status = blockchain.fund_wallet(address)
-    flash(status)    
 
 @auth.route('/')
 def index():
@@ -64,10 +36,9 @@ def index():
     If Voter session found redirect to candidate page
     '''
 
-    Candidate.lock_all(database.session)  # Lock all candidates to prevent modifications
-    Position.lock_all(database.session)  # Lock all positions to prevent modifications
-    if Candidate.is_locked(database.session):    
-        print('Candidates are locked for modification')
+    if not Candidate.is_locked(database.session) or not Position.is_locked(database.session):    
+        Candidate.lock_all(database.session)  # Lock all candidates to prevent modifications
+        Position.lock_all(database.session)  # Lock all positions to prevent modifications
     
     if not current_user.is_authenticated:
         return render_template('index.html')
@@ -204,7 +175,7 @@ def signup_post():
             password_hash,
             encrypt_object(email),
             '',
-            '',  # Remove '0x' prefix
+            '',
             generate_password_hash(otp)
         )
     
@@ -237,8 +208,9 @@ def verify_otp_post(username_hash):
     
     if check_password_hash(otp.otp, user_otp):   
         delete_OTP(otp)
-        fund_new_user_wallet(username_hash)
+        status, e = fund_new_user_wallet(username_hash)
         flash('Voter registration complete')
+        flash(f'{e}')
         return redirect(url_for('auth.index'))
 
     flash('Incorrect OTP')
