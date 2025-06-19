@@ -304,11 +304,11 @@ class Blockchain:
         Returns:
             dict: The transaction receipt.
         """
-        sys.stdout.write(f" Signing Tx...{private_key}")
+        sys.stdout.write(f' \r Signing Tx ...{private_key} ')
         signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=private_key)
-        sys.stdout.write(" Sending Tx...")
+        sys.stdout.write(f' \r Sending Tx ... ')
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        sys.stdout.write(" Waiting for Tx receipt...")
+        sys.stdout.write(f' \r Waiting for Tx receipt ... ')
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
 
         # Log transaction, add to off-chain database
@@ -318,7 +318,7 @@ class Blockchain:
             tx_receipt["from"],
             int(tx_receipt["gasUsed"]),
         )
-        sys.stdout.write(f" Transaction receipt: {tx_receipt}")
+        sys.stdout.write(f' \r Transaction receipt: {tx_receipt.transactionHash.hex()} ')
         sys.stdout.flush()
         return tx_receipt
 
@@ -468,7 +468,7 @@ class Blockchain:
             return (False, str(e))
 
 
-def fund_new_user_wallet(wallet, contract_add, username_hash):
+def fund_new_user_wallet(username_hash):
     """
     Creates a new wallet for a user, funds it, and updates the user's wallet info in the database.
 
@@ -480,6 +480,7 @@ def fund_new_user_wallet(wallet, contract_add, username_hash):
     Returns:
         tuple: (bool, str) indicating success and a message.
     """
+    
     # Create user wallet
     new_wallet = Account.create()
     address = new_wallet.address
@@ -487,7 +488,7 @@ def fund_new_user_wallet(wallet, contract_add, username_hash):
     print(f"New wallet address: {address}")
     print(f"New wallet private key: {private_key}")
 
-    blockchain = Blockchain(wallet, contract_add)
+    blockchain = Blockchain(fetch_admin_wallet_address(), fetch_admin_wallet_address())
 
     # Fund wallet address
     status, msg = blockchain.fund_wallet(address)

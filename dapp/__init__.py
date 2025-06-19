@@ -50,7 +50,7 @@ def init_candidates(path, db, Candidate):
                 ADMIN_PRIVATE_KEY, row[2], candidate_hash
             )
 
-            sys.stdout.write(f'Candidate {row[1]} registration status: {msg}, candidate_hash: {candidate_hash.hex()} \n')
+            # sys.stdout.write(f'Candidate {row[1]} registration status: {msg}, candidate_hash: {candidate_hash.hex()} \n')
             # If the candidate was successfully registered on-chain, add them to the database
             if status:
                 db.session.add(
@@ -61,7 +61,7 @@ def init_candidates(path, db, Candidate):
                         candidate_hash=candidate_hash.hex(),
                     )
                 )
-                sys.stdout.write(f"Successfully registered candidate {row[1]} to database\n")
+                sys.stdout.write(f' \r Successfully registered candidate {row[1]} \n')
             
         db.session.commit()
 
@@ -131,7 +131,7 @@ def create_app():
     """
     
     WORKING_DIRECTORY = os.getcwd() # Gets the current working directory
-    DB_NAME = "offchain78.sqlite" # Database name
+    DB_NAME = "offchain81.sqlite" # Database name
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv" # Candidates CSV file path
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv" # Positions CSV file path
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json" # Admin user details JSON file path

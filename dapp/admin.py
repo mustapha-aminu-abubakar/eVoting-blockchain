@@ -178,7 +178,7 @@ def update_time_post():
     tz = request.form.get('tz').strip()
     private_key = request.form.get('private_key').strip()
     
-    print(f'[flask UI] Start time: {datetime.fromtimestamp(start_time, tz=tz)}, End time: {datetime.fromtimestamp(end_time, tz=tz)}, timezone: {tz}')
+    print(f'[flask UI] Start time: {start_time}, End time: {end_time}, timezone: {tz}')
 
     blockchain = Blockchain(
         fetch_admin_wallet_address(),

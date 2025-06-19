@@ -22,13 +22,17 @@
         {% for r in results %}
             <tr class="{% if r.is_winner and r.vote_count > 0 %}success{% else %}active{% endif %}">
                 <td>{{ r.position }}</td>
-                <td>name</td>
+                <td>{{ r.candidate.name }}</td>
                 <td>{{ r.candidate_hash }}</td>
                 <td>{{ r.vote_count }}</td>
                 <td>
+                    {% if r.vote_count > 0 %}
                     <a href="{{ url_for('main.result_by_candidate', candidate_hash=r.candidate_hash) }}"> 
                         <button type="button" class="btn btn-sm btn-success">Select</button>
                     </a>
+                    {% else %}
+                        <button type="button" class="btn btn-sm btn-secondary" disabled>Select</button>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
