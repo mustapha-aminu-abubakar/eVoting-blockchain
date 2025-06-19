@@ -50,20 +50,13 @@
             <tr>
                 <th>Username</th>
                 <th>Name</th>
-                <th>
-                    Vote count
-                    <span class="badge">
-                        {{ total_vote_count }}
-                    </span>
-                </th>
                 <th>Admin control</th>
             </tr>
         </thead>
         <tbody>
 
             {% for candidate in candidates %}
-            <tr class="{{ 'success' if candidate.id in max_vote_owner_id else 'active' }}">
-                <td>{{ candidate.username }}</td>
+            <tr>
                 <td>{{ candidate.name }}</td>                
                 <td>{{ candidate.position.position }}</td>
                 <td>
@@ -96,28 +89,14 @@
             <tr>
                 <th>Username hash</th>
                 <th>Wallter address</th>
-                <th>Vote status</th>
                 <th>Admin control</th>
             </tr>
         </thead>
         <tbody>
             {% for voter in voters %}
-            <tr class="{{ 'success' if voter.vote_status else 'active' }}">
+            <tr class="{{ 'success' if voter.voter_status else 'active' }}">
                 <td>{{ voter.username_hash }}</td>
                 <td>{{ voter.wallet_address }}</td>
-                {% if count_votes_by_voter(voter.id) == positions_count %}
-                <td>
-                    <span class="label label-success">Voted</span>
-                </td>
-                {% elif count_votes_by_voter(voter.id) == 0 %}
-                <td>
-                    <span class="label label-danger">Not voted</span>
-                </td>
-                {% else %}
-                <td>
-                    <span class="label label-warning">Not completed</span>
-                </td>
-                {% endif %}
                 <td>
                     <a href="{{ url_for('admin.block_voter', voter_id=voter.id) }}">
                         <button type="button"
@@ -131,6 +110,26 @@
         </tbody>
     </table>
 
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Transaction hash</th>
+                <th>Sender wallet</th>
+                <th>Gas used</th>
+                <th>Date time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in txns%}
+                <tr class="{% if txn.status %}success{% else %}active{% endif %}">
+                    <td>{{ txn.txn_hash }}</td>
+                    <td>{{ txn.sender }}</td>
+                    <td>{{ txn.gas }}</td>
+                    <td>{{ ts_to_dt(txn.txn_ts) }} UTC</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 <script>
     document.getElementById('tz').value = Intl.DateTimeFormat().resolvedOptions().timeZone;

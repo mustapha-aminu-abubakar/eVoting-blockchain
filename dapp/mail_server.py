@@ -12,8 +12,17 @@ Subject: eVoting System
 
 Your one time password: """
 
-    def send_mail(self, username, receiver_email, OTP):
-        #receiver_email = "oloriebiridwan@gmail.com"
+    def send_mail(self, receiver_email, OTP):
+        """
+        Sends an email containing a one-time password (OTP) to the specified receiver.
+
+        Args:
+            receiver_email (str): The recipient's email address.
+            OTP (str): The one-time password to be sent.
+
+        Returns:
+            dict: The result of the sendmail operation from smtplib.
+        """
         receiver_otp = self._message + OTP
 
         with smtplib.SMTP(self._smtp_server, self._port) as server:
@@ -24,11 +33,3 @@ Your one time password: """
             server.quit()
 
             return ask
-
-
-if __name__ == '__main__':
-    mail_agent = MailServer()
-    print(mail_agent.send_mail(
-        'suvambasak22',
-        '123456'
-    ))

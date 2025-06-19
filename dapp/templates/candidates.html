@@ -3,7 +3,7 @@
 <div class="container">
     <h2>
         Voter details
-        <a href="{{ url_for('auth.logout') }}">
+        <a href="{{ url_for('main.positions') }}">
             <button class="btn btn-danger pull-right">
                 Logout
             </button>
@@ -38,17 +38,13 @@
     </thead>
     <tbody>
 
-        {% for candidate in candidates %}
+        {% for k, v in candidates.items() %}
         <tr>
-            <td>{{ candidate.name }}</td>
+            <td>{{ v.name }}</td>
             <td>
-                {% if has_voted_for_position_id %}
-                <button type="button" class="btn btn-sm disabled">Voted</button>
-                {% else %}
-                <a href="{{ url_for('main.cast_vote', candidate_id=candidate.id) }}">
+                <a href="{{ url_for('main.cast_vote', candidate_id=v.id) }}">
                     <button type="button" class="btn btn-sm btn-success">Vote</button>
                 </a>
-                {% endif %}
             </td>
         </tr>
         {% endfor %}
