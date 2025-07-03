@@ -347,7 +347,7 @@ class Blockchain:
         try:
             tx = {
                 "to": to_address,
-                "value": 200000 * (Candidate.query.count() + 1),
+                "value": 200000 * 10e9 * (Candidate.query.count() + 1),
                 "gas": 21000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
@@ -510,5 +510,5 @@ def fund_new_user_wallet(username_hash):
             username_hash, address, encrypt_object(private_key)
         )
 
-        return (user_wallet_update, e)
-    return
+    return (user_wallet_update, e)
+    

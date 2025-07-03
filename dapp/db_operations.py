@@ -350,7 +350,7 @@ def fetch_all_transactions():
     Returns:
         list[Transaction]: List of all transactions.
     """
-    return Transaction.query.all()
+    return Transaction.query.order_by(Transaction.txn_ts.desc()).all()
 
 
 # Block section
