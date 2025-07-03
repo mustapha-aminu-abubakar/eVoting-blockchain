@@ -127,10 +127,13 @@ class Blockchain:
                 start_ts_utc, end_ts_utc
             ).build_transaction(
                 {
-                    "gasPrice": int(self.w3.eth.gas_price * 1.2),
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
+                    "gas": 200000,
+                    "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                    "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
+                    "type": 2,  # EIP-1559 transaction type
                 }
             )
             tx_receipt = self._send_tx(tx, private_key)
@@ -155,10 +158,13 @@ class Blockchain:
                 new_end_time
             ).build_transaction(
                 {
-                    "gasPrice": int(self.w3.eth.gas_price * 1.2),
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
+                    "gas": 200000,
+                    "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                    "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
+                    "type": 2,  # EIP-1559 transaction type
                 }
             )
             tx_receipt = self._send_tx(tx, private_key)
@@ -224,11 +230,13 @@ class Blockchain:
                 Web3.to_bytes(hexstr=candidate_hash),
             ).build_transaction(
                 {
-                    "gasPrice": int(self.w3.eth.gas_price * 1.2),
-                    "gas": 2000000,
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
+                    "gas": 200000,
+                    "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                    "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
+                    "type": 2,  # EIP-1559 transaction type
                 }
             )
             tx_receipt = self._send_tx(tx, private_key)
@@ -254,10 +262,13 @@ class Blockchain:
                 int(position_id), candidate_hash
             ).build_transaction(
                 {
-                    "gasPrice": int(self.w3.eth.gas_price * 1.2),
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
+                    "gas": 200000,
+                    "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
+                    "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
+                    "type": 2,  # EIP-1559 transaction type
                 }
             )
             tx_receipt = self._send_tx(tx, private_key)
@@ -336,7 +347,7 @@ class Blockchain:
         try:
             tx = {
                 "to": to_address,
-                "value": self.w3.to_wei(0.002, "ether"),
+                "value": 200000 * (Candidate.query.count() + 1),
                 "gas": 21000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
@@ -424,6 +435,7 @@ class Blockchain:
                     "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
+                    "type": 2,  # EIP-1559 transaction type
                 }
             )
 
@@ -498,4 +510,5 @@ def fund_new_user_wallet(username_hash):
             username_hash, address, encrypt_object(private_key)
         )
 
-    return (user_wallet_update, e)
+        return (user_wallet_update, e)
+    return

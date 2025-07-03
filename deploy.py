@@ -65,6 +65,7 @@ tx = contract_instance.constructor().build_transaction(
 )
 sys.stdout.write(f'\r Signing transaction...               ')
 signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+# print(signed_tx)
 tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 sys.stdout.write(f'\r Waiting for Tx receipt...             ')
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
