@@ -31,6 +31,8 @@ from .validator import (
 from .ethereum import Blockchain, fund_new_user_wallet
 from .cryptography import encrypt_object, decrypt_object
 from .db import database
+from .ethereum import get_voting_time
+from datetime import datetime
 
 
 auth = Blueprint("auth", __name__)
@@ -127,6 +129,14 @@ def signin_post():
     if voter.voter_status == AccountStatus.BLOCKED:
         flash(f"{username_hash} is blocked by ADMIN")
         return render_template("error.html", error_msg="BLOCKED")
+    
+    # Check if voter is trying to sign in within the election window
+    start_time, end_time = get_voting_time()
+    if start_time and not is_admin(voter):
+        now = datetime.utcnow()
+        if not (start_time <= now <= end_time):
+            flash("Sign in is only allowed during the election window.")
+            return render_template("index.html")
 
     # Start login session
     login_user(voter)

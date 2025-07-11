@@ -39,12 +39,19 @@
     <tbody>
 
         {% for k, v in candidates.items() %}
-        <tr>
+        <tr{% if not v.candidate_status %} class="text-muted"{% endif %}>
             <td>{{ v.name }}</td>
             <td>
-                <a href="{{ url_for('main.cast_vote', candidate_id=v.id) }}">
-                    <button type="button" class="btn btn-sm btn-success">Vote</button>
-                </a>
+            {% if v.candidate_status %}
+            <a href="{{ url_for('main.cast_vote', candidate_id=v.id) }}">
+            <button type="button" class="btn btn-sm btn-success">Vote</button>
+            </a>
+            {% else %}
+            <button type="button" class="btn btn-sm btn-secondary" disabled>Disqualified</button>
+            {% endif %}
+            </td>
+        </tr>
+            {% endif %}
             </td>
         </tr>
         {% endfor %}
