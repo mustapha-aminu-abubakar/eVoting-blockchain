@@ -130,7 +130,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 300000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -161,7 +161,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 300000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -233,7 +233,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 300000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -265,7 +265,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 300000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -346,9 +346,11 @@ class Blockchain:
         """
         print("[fund_wallet] Buiding transaction ... ")
         try:
+            # Use Web3.to_wei for ETH to wei conversion
+            estimated_eth = 0.002  # Estimate: registering a candidate costs ~0.002 ETH
             tx = {
                 "to": to_address,
-                "value": 300000 * 10e9 * (Candidate.query.count() + 1),
+                "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.002 ETH in wei
                 "gas": 21000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
@@ -433,7 +435,7 @@ class Blockchain:
                     "from": self.w3.eth.default_account,
                     "nonce": self._get_nonce(),
                     "chainId": self.sepolia,
-                    "gas": 300000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type

@@ -131,7 +131,7 @@ def create_app():
     """
     
     WORKING_DIRECTORY = os.getcwd() # Gets the current working directory
-    DB_NAME = "offchain85.sqlite" # Database name
+    DB_NAME = "offchain86.sqlite" # Database name
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv" # Candidates CSV file path
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv" # Positions CSV file path
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json" # Admin user details JSON file path
