@@ -53,9 +53,6 @@ class Blockchain:
         self._contract_instance = self.w3.eth.contract(
             abi=self._ABI, address=self._contract_address
         )
-        print(self.w3.is_connected())
-        print(self.w3.eth.chain_id)  # Should match Sepolia's ID (11155111)
-
 
     def _read_ABI(self):
         """
@@ -237,7 +234,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 100000,
+                    "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -439,7 +436,7 @@ class Blockchain:
                     "from": self.w3.eth.default_account,
                     "nonce": self._get_nonce(),
                     "chainId": self.sepolia,
-                    "gas": 100000,
+                    "gas": 20000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -527,7 +524,7 @@ def get_voting_time():
             dict: Contains start and end times in both unix and readable formats, or error.
         """
         
-        blockchain = Blockchain(fetch_admin_wallet_address(), fetch_admin_wallet_address())
+        blockchain = Blockchain(fetch_admin_wallet_address(), fetch_contract_address())
 
         try:
             start_unix, end_unix = blockchain._contract_instance.functions.getVotingTime().call()

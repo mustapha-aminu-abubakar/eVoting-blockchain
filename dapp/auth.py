@@ -28,10 +28,9 @@ from .validator import (
     validate_signin,
     validate_signup,
 )
-from .ethereum import Blockchain, fund_new_user_wallet
+from .ethereum import Blockchain, fund_new_user_wallet, get_voting_time
 from .cryptography import encrypt_object, decrypt_object
 from .db import database
-from .ethereum import get_voting_time
 from datetime import datetime
 
 
