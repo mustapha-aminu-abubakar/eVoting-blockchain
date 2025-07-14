@@ -234,7 +234,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 200000,
+                    "gas": 250000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -359,9 +359,7 @@ class Blockchain:
                 "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                 "type": 2,  # EIP-1559 transaction type
             }
-            # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
-            # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")
-
+            
             tx_receipt = self._send_tx('Fund user wallet', tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
