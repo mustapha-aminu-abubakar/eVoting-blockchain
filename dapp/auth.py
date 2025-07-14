@@ -132,11 +132,10 @@ def signin_post():
     
     # Check if voter is trying to sign in within the election window
     start_time, end_time = get_voting_time()
-    if start_time and not is_admin(voter):
-        now = datetime.utcnow()
-        if not (start_time <= now <= end_time):
-            flash("Sign in is only allowed during the election window.")
-            return render_template("index.html")
+    print(f"Election start time: {start_time}, end time: {end_time}")
+    if not start_time or not (start_time <= datetime.utcnow() <= end_time):
+        flash("Sign in is only allowed during the election window.")
+        return render_template("index.html")
 
     # Start login session
     login_user(voter)
