@@ -53,6 +53,9 @@ class Blockchain:
         self._contract_instance = self.w3.eth.contract(
             abi=self._ABI, address=self._contract_address
         )
+        print(self.w3.is_connected())
+        print(self.w3.eth.chain_id)  # Should match Sepolia's ID (11155111)
+
 
     def _read_ABI(self):
         """
@@ -136,6 +139,7 @@ class Blockchain:
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
+            print(f"start time {start_ts_utc}, end time {end_ts_utc} ")
             tx_receipt = self._send_tx('Start election', tx, private_key)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
@@ -447,22 +451,22 @@ class Blockchain:
         except Exception as e:
             return (False, str(e), None)
 
-    def get_voting_time(self):
-        """
-        Prints the current, start, and end voting times from the contract.
+    # def get_voting_time(self):
+    #     """
+    #     Prints the current, start, and end voting times from the contract.
 
-        Returns:
-            tuple: (bool, str) indicating success or error.
-        """
-        try:
-            now = self._contract_instance.functions.getCurrentTimestamp().call()
-            start = self._contract_instance.functions.startVotingTime().call()
-            end = self._contract_instance.functions.endVotingTime().call()
-            print(
-                f"Current time: {datetime.fromtimestamp(now)}, Start time: {datetime.fromtimestamp(start)}, End time: {(datetime.fromtimestampend)}"
-            )
-        except Exception as e:
-            return (False, str(e))
+    #     Returns:
+    #         tuple: (bool, str) indicating success or error.
+    #     """
+    #     try:
+    #         now = self._contract_instance.functions.getCurrentTimestamp().call()
+    #         start = self._contract_instance.functions.startVotingTime().call()
+    #         end = self._contract_instance.functions.endVotingTime().call()
+    #         print(
+    #             f"Current time: {datetime.fromtimestamp(now)}, Start time: {datetime.fromtimestamp(start)}, End time: {(datetime.fromtimestampend)}"
+    #         )
+    #     except Exception as e:
+    #         return (False, str(e))
 
     def has_user_voted(self, position_id, voter_hash):
         """
@@ -526,17 +530,7 @@ def get_voting_time():
         blockchain = Blockchain(fetch_admin_wallet_address(), fetch_admin_wallet_address())
 
         try:
-            start_unix, end_unix = (
-                blockchain._contract_instance.functions.getVotingTime().call()
-            )
-
-            # # Convert to readable datetime in UTC
-            # start_time = datetime.utcfromtimestamp(
-            #     start_unix, tz=timezone.utc
-            # ).strftime("%Y-%m-%d %H:%M:%S UTC")
-            # end_time = datetime.utcfromtimestamp(end_unix, tz=timezone.utc).strftime(
-            #     "%Y-%m-%d %H:%M:%S UTC"
-            # )
+            start_unix, end_unix = blockchain._contract_instance.functions.getVotingTime().call()
 
             return (start_unix,end_unix)
 

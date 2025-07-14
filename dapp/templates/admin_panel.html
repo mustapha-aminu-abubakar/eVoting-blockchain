@@ -114,6 +114,7 @@
         <thead>
             <tr>
                 <th>Transaction hash</th>
+                <th>Transaction type</th>
                 <th>Sender wallet</th>
                 <th>Gas used</th>
                 <th>Date time</th>
@@ -122,8 +123,9 @@
         <tbody>
             {% for txn in txns%}
                 <tr class="{% if txn.status %}success{% else %}active{% endif %}">
-                    <td>{{ txn.txn_hash }}</td>
-                    <td>{{ txn.sender }}</td>
+                    <td class="hide_full_content" title="{{ txn.txn_hash }}">{{ txn.txn_hash[:20] }}...</td>
+                    <td>{{ txn.txn_type }}</td>
+                    <td class="hide_full_content" title="{{ txn.sender }}">{{ txn.sender[:20] }}...</td>
                     <td>{{ txn.gas }}</td>
                     <td>{{ ts_to_dt(txn.txn_ts) }} UTC</td>
                 </tr>
