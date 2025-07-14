@@ -216,7 +216,7 @@ def update_time_post():
             convert_to_unix_timestamp(end_time)
         )
         show_flash_msg(status, tx_msg)
-    times = blockchain.get_voting_time()
-    print(times)
+    # times = blockchain.get_voting_time()
+    # print(times)
 
     return redirect(url_for('admin.admin_panel'))

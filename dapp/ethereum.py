@@ -130,13 +130,14 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 200000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
-            tx_receipt = self._send_tx(tx, private_key)
+            print(f"start time {start_ts_utc}, end time {end_ts_utc} ")
+            tx_receipt = self._send_tx('Start election', tx, private_key)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e))
@@ -161,46 +162,46 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 200000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
-            tx_receipt = self._send_tx(tx, private_key)
+            tx_receipt = self._send_tx('Extend election', tx, private_key)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e))
 
-    def get_voting_time(self):
-        """
-        Retrieves the voting start and end times from the blockchain.
+    # def get_voting_time(self):
+    #     """
+    #     Retrieves the voting start and end times from the blockchain.
 
-        Returns:
-            dict: Contains start and end times in both unix and readable formats, or error.
-        """
-        try:
-            start_unix, end_unix = (
-                self._contract_instance.functions.getVotingTime().call()
-            )
+    #     Returns:
+    #         dict: Contains start and end times in both unix and readable formats, or error.
+    #     """
+    #     try:
+    #         start_unix, end_unix = (
+    #             self._contract_instance.functions.getVotingTime().call()
+    #         )
 
-            # Convert to readable datetime in UTC
-            start_time = datetime.utcfromtimestamp(
-                start_unix, tz=timezone.utc
-            ).strftime("%Y-%m-%d %H:%M:%S UTC")
-            end_time = datetime.utcfromtimestamp(end_unix, tz=timezone.utc).strftime(
-                "%Y-%m-%d %H:%M:%S UTC"
-            )
+    #         # Convert to readable datetime in UTC
+    #         start_time = datetime.utcfromtimestamp(
+    #             start_unix, tz=timezone.utc
+    #         ).strftime("%Y-%m-%d %H:%M:%S UTC")
+    #         end_time = datetime.utcfromtimestamp(end_unix, tz=timezone.utc).strftime(
+    #             "%Y-%m-%d %H:%M:%S UTC"
+    #         )
 
-            return {
-                "start_unix": start_unix,
-                "end_unix": end_unix,
-                "start_time": start_time,
-                "end_time": end_time,
-            }
+    #         return {
+    #             "start_unix": start_unix,
+    #             "end_unix": end_unix,
+    #             "start_time": start_time,
+    #             "end_time": end_time,
+    #         }
 
-        except Exception as e:
-            return {"error": str(e)}
+    #     except Exception as e:
+    #         return {"error": str(e)}
 
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
         """
@@ -233,13 +234,13 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 200000,
+                    "gas": 250000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
-            tx_receipt = self._send_tx(tx, private_key)
+            tx_receipt = self._send_tx('Cast vote', tx, private_key)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e))
@@ -265,13 +266,13 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 200000,
+                    "gas": 100000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
-            tx_receipt = self._send_tx(tx, private_key)
+            tx_receipt = self._send_tx('Register candidate', tx, private_key)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e))
@@ -304,7 +305,7 @@ class Blockchain:
         dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
         print(f"Current contract block.timestamp: {timestamp} ({dt.isoformat()})")
 
-    def _send_tx(self, tx, private_key):
+    def _send_tx(self, tx_type, tx, private_key):
         """
         Signs and sends a transaction to the blockchain, waits for receipt, and logs it.
 
@@ -324,6 +325,7 @@ class Blockchain:
 
         # Log transaction, add to off-chain database
         add_txn(
+            tx_type,
             tx_receipt["transactionHash"].hex(),
             bool(tx_receipt["status"]),
             tx_receipt["from"],
@@ -345,9 +347,11 @@ class Blockchain:
         """
         print("[fund_wallet] Buiding transaction ... ")
         try:
+            # Use Web3.to_wei for ETH to wei conversion
+            estimated_eth = 0.002  # Estimate: registering a candidate costs ~0.002 ETH
             tx = {
                 "to": to_address,
-                "value": 200000 * 10e9 * (Candidate.query.count() + 1),
+                "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.002 ETH in wei
                 "gas": 21000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
@@ -355,10 +359,8 @@ class Blockchain:
                 "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                 "type": 2,  # EIP-1559 transaction type
             }
-            # print(f"maxFeePerGas: {tx['maxFeePerGas']/1000000}")
-            # print(f"maxPriorityFeePerGas: {tx['maxPriorityFeePerGas']/1000000}")
-
-            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            
+            tx_receipt = self._send_tx('Fund user wallet', tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e))
@@ -432,34 +434,34 @@ class Blockchain:
                     "from": self.w3.eth.default_account,
                     "nonce": self._get_nonce(),
                     "chainId": self.sepolia,
-                    "gas": 200000,
+                    "gas": 20000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
                 }
             )
 
-            tx_receipt = self._send_tx(tx, ADMIN_PRIVATE_KEY)
+            tx_receipt = self._send_tx('Publish result', tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
             return (False, str(e), None)
 
-    def get_voting_time(self):
-        """
-        Prints the current, start, and end voting times from the contract.
+    # def get_voting_time(self):
+    #     """
+    #     Prints the current, start, and end voting times from the contract.
 
-        Returns:
-            tuple: (bool, str) indicating success or error.
-        """
-        try:
-            now = self._contract_instance.functions.getCurrentTimestamp().call()
-            start = self._contract_instance.functions.startVotingTime().call()
-            end = self._contract_instance.functions.endVotingTime().call()
-            print(
-                f"Current time: {datetime.fromtimestamp(now)}, Start time: {datetime.fromtimestamp(start)}, End time: {(datetime.fromtimestampend)}"
-            )
-        except Exception as e:
-            return (False, str(e))
+    #     Returns:
+    #         tuple: (bool, str) indicating success or error.
+    #     """
+    #     try:
+    #         now = self._contract_instance.functions.getCurrentTimestamp().call()
+    #         start = self._contract_instance.functions.startVotingTime().call()
+    #         end = self._contract_instance.functions.endVotingTime().call()
+    #         print(
+    #             f"Current time: {datetime.fromtimestamp(now)}, Start time: {datetime.fromtimestamp(start)}, End time: {(datetime.fromtimestampend)}"
+    #         )
+    #     except Exception as e:
+    #         return (False, str(e))
 
     def has_user_voted(self, position_id, voter_hash):
         """
@@ -512,3 +514,20 @@ def fund_new_user_wallet(username_hash):
 
     return (user_wallet_update, e)
     
+def get_voting_time():
+        """
+        Retrieves the voting start and end times from the blockchain.
+
+        Returns:
+            dict: Contains start and end times in both unix and readable formats, or error.
+        """
+        
+        blockchain = Blockchain(fetch_admin_wallet_address(), fetch_contract_address())
+
+        try:
+            start_unix, end_unix = blockchain._contract_instance.functions.getVotingTime().call()
+
+            return (start_unix,end_unix)
+
+        except Exception as e:
+            return (False, str(e))

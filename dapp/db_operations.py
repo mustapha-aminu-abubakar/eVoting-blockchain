@@ -590,7 +590,7 @@ def add_new_voter_signup(
     database.session.commit()
 
 
-def add_txn(txn_hash, status, sender, gas):
+def add_txn(txn_type, txn_hash, status, sender, gas):
     """
     Adds a new blockchain transaction record to the database.
 
@@ -600,7 +600,7 @@ def add_txn(txn_hash, status, sender, gas):
         sender (str): The sender's address.
         gas (int): The gas used for the transaction.
     """
-    new_txn = Transaction(txn_hash=txn_hash, status=status, sender=sender, gas=gas)
+    new_txn = Transaction(txn_type=txn_type, txn_hash=txn_hash, status=status, sender=sender, gas=gas)
     database.session.add(new_txn)
     database.session.commit()
 

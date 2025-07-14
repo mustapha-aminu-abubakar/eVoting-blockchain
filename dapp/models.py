@@ -209,6 +209,8 @@ class Result(database.Model, LockableMixin):
 
 
 class Transaction(database.Model, LockableMixin):
+    txn_type = database.Column(database.String(66))
+    
     txn_hash = database.Column(database.String(66), primary_key=True)
 
     status = database.Column(database.Boolean, default=False)
@@ -222,7 +224,8 @@ class Transaction(database.Model, LockableMixin):
     def __repr__(self) -> str:
         return f"""
             Transaction(
-                transaction_hash: {self.txn_hash}
+                transaction hash: {self.txn_hash}
+                transaction type: {self.txn_type}
                 status: {self.status}
                 sender wallet: {self.sender}
                 gas used: {self.gas}
