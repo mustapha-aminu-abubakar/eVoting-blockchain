@@ -434,7 +434,7 @@ class Blockchain:
                     "from": self.w3.eth.default_account,
                     "nonce": self._get_nonce(),
                     "chainId": self.sepolia,
-                    "gas": 20000,
+                    "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -444,24 +444,8 @@ class Blockchain:
             tx_receipt = self._send_tx('Publish result', tx, ADMIN_PRIVATE_KEY)
             return (bool(tx_receipt["status"]), tx_receipt["transactionHash"].hex())
         except Exception as e:
-            return (False, str(e), None)
+            return (False, str(e))
 
-    # def get_voting_time(self):
-    #     """
-    #     Prints the current, start, and end voting times from the contract.
-
-    #     Returns:
-    #         tuple: (bool, str) indicating success or error.
-    #     """
-    #     try:
-    #         now = self._contract_instance.functions.getCurrentTimestamp().call()
-    #         start = self._contract_instance.functions.startVotingTime().call()
-    #         end = self._contract_instance.functions.endVotingTime().call()
-    #         print(
-    #             f"Current time: {datetime.fromtimestamp(now)}, Start time: {datetime.fromtimestamp(start)}, End time: {(datetime.fromtimestampend)}"
-    #         )
-    #     except Exception as e:
-    #         return (False, str(e))
 
     def has_user_voted(self, position_id, voter_hash):
         """

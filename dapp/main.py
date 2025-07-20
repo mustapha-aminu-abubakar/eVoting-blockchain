@@ -114,10 +114,10 @@ def position(position_id):
     position = fetch_position_by_id(position_id)
     candidates = {}
     candidate_hashes = blockchain.get_candidates(position_id)
-    print(f"Candidate hashes for position {position_id}: {candidate_hashes}")
+    # print(f"Candidate hashes for position {position_id}: {candidate_hashes}")
     for _hash in candidate_hashes:
         candidates[_hash] = fetch_candidate_by_hash(_hash)
-    print(f"candidates: {candidates}")
+    # print(f"candidates: {candidates}")
 
     # If position or candidates fetch failed
     if not position or not candidates:
