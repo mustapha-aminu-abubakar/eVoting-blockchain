@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="app.css" />
+    <!-- <script src="app.js" defer></script> -->
+  </head>
+  <body>
+    <div class="min-h-screen flex flex-col">
+      <!-- NavBar -->
+      <nav class="bg-black text-white py-4 px-6 relative z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+              </svg>
+            </div>
+            <span class="text-xl font-bold">VoteNow</span>
+            <span class="text-gray-400">|</span>
+            <span class="text-gray-300">HOD Election</span>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="#"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Aspirants</button></a>
+            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Live Results</button></a>
+            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Sign Out</button></a>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobileMenuToggle" class="md:hidden">
+            <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileNav" class="md:hidden mt-4 pb-4 border-t border-gray-700 hidden">
+          <div class="flex flex-col space-y-4 mt-4">
+            <a href="#"><button class="text-left transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Aspirants</button></a>
+            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Live Results</button></a>
+            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Sign Out</button></a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Hero Section -->
+      <section class="relative bg-gradient-to-r from-gray-900 via-gray-800 to-black text-white py-20 px-6 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+          <div class="absolute top-10 left-10 w-20 h-20 bg-blue-500 rounded-full blur-xl"></div>
+          <div class="absolute top-32 right-20 w-32 h-32 bg-yellow-500 rounded-full blur-xl"></div>
+          <div class="absolute bottom-20 left-1/3 w-24 h-24 bg-green-500 rounded-full blur-xl"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto relative z-10">
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <!-- Left Content -->
+            <div>
+              <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                <span class="text-yellow-400">Voting</span><br />
+                <span class="text-yellow-400">Made Easy</span><br />
+                <span class="text-white">HOD ELECTION</span>
+              </h1>
+            </div>
+
+            <!-- Right Content - Timer -->
+            <div class="text-center md:text-right">
+              <div class="bg-black bg-opacity-50 rounded-lg p-6 inline-block">
+                <h3 class="text-white text-lg mb-4">Time Remaining</h3>
+                <div class="flex items-center space-x-8">
+                  <div id="daysBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">02</div>
+                  <div id="hoursBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">12</div>
+                  <!-- <span class="text-white text-xl">:</span> -->
+                  <div id="minutesBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">45</div>
+                </div>
+                <div class="flex justify-center md:justify-end space-x-8 mt-2 text-sm text-gray-300">
+                  <span>DAYS</span>
+                  <span>HOURS</span>
+                  <span>MINUTES</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Welcome Card -->
+      <section class="py-8 px-6 relative -mt-8 z-20">
+        <div class="max-w-4xl mx-auto">
+          <div class="bg-white rounded-lg shadow-xl p-6 md:p-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Hello there 👋</h2>
+                <p class="text-gray-600">It's time to make your voice heard</p>
+              </div>
+              <div class="mt-4 md:mt-0">
+                {% if start_time %}
+                <a href="{{ url_for('main.positions') }}">
+                <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                  <span>Cast Your Vote Now</span>
+                  <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">LIVE</span>
+                  <span>→</span>
+                </button>
+                </a>
+                {% else %}
+                <button id="voteNowBtn" class="bg-gray-400 text-gray-200 px-8 py-4 rounded-lg font-medium cursor-not-allowed flex items-center space-x-2" disabled>
+                  <span>Cast Your Vote Now</span>
+                  <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">NOT LIVE</span>
+                  <span>→</span>
+                </button>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Voting is open now</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About the Project -->
+      <section class="py-16 px-6 bg-gray-50">
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">About the Project</h2>
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="order-2 md:order-1">
+              <img src="/images/votenow-project.png" alt="VoteNow Platform" class="rounded-lg shadow-lg w-full" />
+            </div>
+            <div class="order-1 md:order-2">
+              <h3 class="text-2xl font-bold text-gray-900 mb-4">Empowering Democracy Through Secure Digital Voting</h3>
+              <p class="text-gray-600 mb-6 leading-relaxed">
+                This project introduces a minimalist, blockchain-powered E-voting platform that lets eligible citizens vote securely from anywhere. Each vote is tamper-proof, verifiable, and transparently recorded on a distributed ledger.
+              </p>
+              <p class="text-gray-600 leading-relaxed">
+                Our mission is to modernize elections by reducing fraud, cutting costs, and increasing participation through a decentralized, user-friendly system built for trust, accessibility, and mobile use.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Meet the Team -->
+      <section class="py-16 px-6 bg-white">
+        <div class="max-w-6xl mx-auto">
+          <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">Meet the Team</h2>
+          <div id="teamGrid" class="grid md:grid-cols-3 gap-8">
+            <!-- Team members injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Election Ongoing -->
+      <section class="py-16 px-6 bg-black text-white">
+        <div class="max-w-6xl mx-auto text-center">
+          <h2 class="text-3xl md:text-4xl font-bold mb-12">Election Ongoing</h2>
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h3 class="text-xl mb-6">Time Remaining</h3>
+              <div class="flex justify-center space-x-8 mb-8">
+                <div class="bg-yellow-500 text-black px-4 py-3 rounded font-bold text-2xl">02</div>
+                <div class="bg-green-500 text-black px-4 py-3 rounded font-bold text-2xl">12</div>
+                <span class="text-2xl">:</span>
+                <div class="bg-red-500 text-white px-4 py-3 rounded font-bold text-2xl">45</div>
+              </div>
+              <div class="flex justify-center space-x-8 text-sm text-gray-300">
+                <span>DAYS</span>
+                <span>HOURS</span>
+                <span>MINUTES</span>
+              </div>
+            </div>
+            <div class="flex justify-center">
+              <div class="relative">
+                <div class="w-24 h-32 bg-gradient-to-b from-amber-600 to-amber-800 rounded-lg relative overflow-hidden">
+                  <div class="absolute top-2 left-2 right-2 h-12 bg-amber-200 rounded-t-lg"></div>
+                  <div class="absolute bottom-2 left-2 right-2 h-12 bg-amber-200 rounded-b-lg"></div>
+                  <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-8 bg-amber-900"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="bg-black text-white py-8 px-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex flex-wrap justify-center md:justify-start space-x-6 md:space-x-8 mb-6">
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Terms</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Privacy Policy</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Help center</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Socials</a>
+          </div>
+          <div class="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6">
+            <div class="flex items-center space-x-2 mb-4 md:mb-0">
+              <div class="w-6 h-6 bg-white rounded flex items-center justify-center">
+                <svg class="w-4 h-4 text-black" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+                </svg>
+              </div>
+              <span class="text-lg font-bold">VoteNow</span>
+            </div>
+            <div class="text-center md:text-right">
+              <p class="text-gray-400 text-sm">2025 Vote-Now. All rights reserves.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script>
+      (function() {
+        const startTimeStr = "{{ start_time or '' }}";
+        console.log(startTimeStr);
+        if (!startTimeStr) return;
+
+        const startMs = new Date(startTimeStr).getTime();
+        const daysBox = document.getElementById('daysBox');
+        const hoursBox = document.getElementById('hoursBox');
+        const minutesBox = document.getElementById('minutesBox');
+        // const daysText = document.getElementById('startCountdownDays');
+        // const hoursText = document.getElementById('startCountdownHours');
+        // const minutesText = document.getElementById('startCountdownMinutes');
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        function updateCountdown() {
+          const now = Date.now();
+          let diff = startMs - now;
+          if (diff < 0) diff = 0;
+
+          const dayMs = 24 * 60 * 60 * 1000;
+          const hourMs = 60 * 60 * 1000;
+          const minuteMs = 60 * 1000;
+
+          const days = Math.floor(diff / dayMs);
+          const hours = Math.floor((diff % dayMs) / hourMs);
+          const minutes = Math.floor((diff % hourMs) / minuteMs);
+
+          if (daysBox) daysBox.textContent = pad2(days);
+          if (hoursBox) hoursBox.textContent = pad2(hours);
+          if (minutesBox) minutesBox.textContent = pad2(minutes);
+          // if (daysText) daysText.textContent = `${days}`;
+          // if (hoursText) hoursText.textContent = `${hours}`;
+          // if (minutesText) minutesText.textContent = `${minutes}`;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      })();
+    </script>
+  </body>
+  </html>
+
+
+

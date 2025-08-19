@@ -203,6 +203,26 @@ class Blockchain:
     #     except Exception as e:
     #         return {"error": str(e)}
 
+    def get_voting_time_iso(self):
+        """
+        Wrapper for contract's getVotingTime() that returns ISO 8601 UTC strings.
+
+        Returns:
+            dict: {"start_unix", "end_unix", "start_iso", "end_iso"} or {"error": str}
+        """
+        try:
+            start_unix, end_unix = self._contract_instance.functions.getVotingTime().call()
+            start_iso = datetime.fromtimestamp(start_unix, tz=timezone.utc).isoformat()
+            end_iso = datetime.fromtimestamp(end_unix, tz=timezone.utc).isoformat()
+            return {
+                "start_unix": int(start_unix),
+                "end_unix": int(end_unix),
+                "start_iso": start_iso,
+                "end_iso": end_iso,
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
     def vote(self, private_key, position_id, voter_hash, candidate_hash):
         """
         Casts a vote for a candidate in a given position.

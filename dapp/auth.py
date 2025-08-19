@@ -67,7 +67,7 @@ def index():
         return redirect(url_for("admin.admin_panel"))
 
     # Redirects to candidate positions page
-    return redirect(url_for("main.positions"))
+    return redirect(url_for("main.home"))
 
 
 @auth.route("/signup")
@@ -130,11 +130,11 @@ def signin_post():
         return render_template("error.html", error_msg="BLOCKED")
     
     # Check if voter is trying to sign in within the election window
-    start_time, end_time = get_voting_time()
-    print(f"Election start time: {start_time}, end time: {end_time}")
-    if not start_time or not (start_time <= datetime.utcnow().timestamp() <= end_time):
-        flash("Sign in is only allowed during the election window.")
-        return render_template("index.html")
+    # start_time, end_time = get_voting_time()
+    # print(f"Election start time: {start_time}, end time: {end_time}")
+    # if not start_time or not (start_time <= datetime.utcnow().timestamp() <= end_time):
+    #     flash("Sign in is only allowed during the election window.")
+    #     return render_template("index.html")
 
     # Start login session
     login_user(voter)

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aspirants</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="app.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <!-- Aspirants List View -->
+    <div id="aspirantsPage" class="min-h-screen flex flex-col bg-gray-50">
+      <nav class="bg-black text-white py-4 px-6 relative z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <!-- CheckCircle -->
+              <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+              </svg>
+            </div>
+            <span class="text-xl font-bold">VoteNow</span>
+            <span class="text-gray-400">|</span>
+            <span class="text-gray-300">HOD Election</span>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-8">
+            <button class="transition-colors text-gray-300 hover:text-white">Home</button>
+            <button class="transition-colors text-yellow-400 font-medium">Aspirants</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Election</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Live Results</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Sign In</button>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobileMenuToggle" class="md:hidden">
+            <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div id="mobileNav" class="md:hidden mt-4 pb-4 border-t border-gray-700 hidden">
+          <div class="flex flex-col space-y-4 mt-4">
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Home</button>
+            <button class="text-left transition-colors text-yellow-400 font-medium">Aspirants</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Election</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Live Results</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Sign In</button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="flex-grow py-12 px-6">
+        <div class="max-w-4xl mx-auto">
+          <!-- Header -->
+          <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose your Candidate</h1>
+            <p class="text-gray-600 text-lg">Get to know the aspirant profile & make an informed decision</p>
+          </div>
+
+          <!-- Category Selector -->
+          <div class="mb-8">
+            <div class="relative">
+              <button id="categoryButton" class="w-full bg-black text-white px-6 py-4 rounded-lg flex items-center justify-between font-medium text-lg">
+                <span id="currentCategoryLabel">HOD ASPIRANTS</span>
+                <div class="flex items-center space-x-4">
+                  <span class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Select</span>
+                  <svg id="chevronIcon" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
+              </button>
+
+              <div id="categoryDropdown" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 mt-1 hidden">
+                <!-- Options injected by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Meet the Aspirant Section -->
+          <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Meet the Aspirant</h2>
+          </div>
+
+          <!-- Candidates List -->
+          <div id="candidatesList" class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Candidate rows injected by JS -->
+          </div>
+        </div>
+      </main>
+
+      <footer class="bg-black text-white py-8 px-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex flex-wrap justify-center md:justify-start space-x-6 md:space-x-8 mb-6">
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Terms</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Privacy Policy</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Help center</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Socials</a>
+          </div>
+
+          <div class="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6">
+            <div class="flex items-center space-x-2 mb-4 md:mb-0">
+              <div class="w-6 h-6 bg-white rounded flex items-center justify-center">
+                <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+                </svg>
+              </div>
+              <span class="text-lg font-bold">VoteNow</span>
+            </div>
+            <div class="text-center md:text-right">
+              <p class="text-gray-400 text-sm">2025 Vote-Now. All rights reserves.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Candidate Details View -->
+    <div id="candidateDetailsPage" class="min-h-screen flex flex-col bg-gray-50 hidden">
+      <nav class="bg-black text-white py-4 px-6 relative z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
+              <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+              </svg>
+            </div>
+            <span class="text-xl font-bold">VoteNow</span>
+            <span class="text-gray-400">|</span>
+            <span class="text-gray-300">HOD Election</span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-8">
+            <button class="transition-colors text-gray-300 hover:text-white">Home</button>
+            <button class="transition-colors text-yellow-400 font-medium">Aspirants</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Election</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Live Results</button>
+            <button class="transition-colors text-gray-300 hover:text-white">Sign In</button>
+          </div>
+
+          <button id="mobileMenuToggleDetails" class="md:hidden">
+            <svg id="menuIconDetails" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <svg id="closeIconDetails" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div id="mobileNavDetails" class="md:hidden mt-4 pb-4 border-t border-gray-700 hidden">
+          <div class="flex flex-col space-y-4 mt-4">
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Home</button>
+            <button class="text-left transition-colors text-yellow-400 font-medium">Aspirants</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Election</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Live Results</button>
+            <button class="text-left transition-colors text-gray-300 hover:text-white">Sign In</button>
+          </div>
+        </div>
+      </nav>
+
+      <main class="flex-grow py-12 px-6">
+        <div class="max-w-2xl mx-auto text-center">
+          <h1 class="text-3xl md:text-4xl font-bold text-green-600 mb-12">Candidate Details</h1>
+
+          <div class="mb-8">
+            <div class="w-48 h-48 mx-auto rounded-full overflow-hidden border-4 border-gray-300">
+              <img id="detailImage" src="" alt="Candidate" class="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          <h2 id="detailName" class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Candidate Name</h2>
+          <p class="text-gray-600 text-lg mb-8">Public Key: <span id="detailKey"></span></p>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="confirmButton" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">Confirm</button>
+            <button id="backButton" class="bg-gray-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-700 transition-colors">Back</button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="bg-black text-white py-8 px-6">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex flex-wrap justify-center md:justify-start space-x-6 md:space-x-8 mb-6">
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Terms</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Privacy Policy</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Help center</a>
+            <a href="#" class="text-gray-300 hover:text-white transition-colors text-sm md:text-base">Socials</a>
+          </div>
+          <div class="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6">
+            <div class="flex items-center space-x-2 mb-4 md:mb-0">
+              <div class="w-6 h-6 bg-white rounded flex items-center justify-center">
+                <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
+                </svg>
+              </div>
+              <span class="text-lg font-bold">VoteNow</span>
+            </div>
+            <div class="text-center md:text-right">
+              <p class="text-gray-400 text-sm">2025 Vote-Now. All rights reserves.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+  </html>
+
+
+
