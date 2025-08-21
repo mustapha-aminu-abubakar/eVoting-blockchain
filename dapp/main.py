@@ -212,7 +212,7 @@ def result():
 
     # Fetches admin published results
     results = fetch_all_results()
-    return render_template("result.html", results=results)
+    return render_template("liveresult.html", results=results)
 
 
 @main.route("/results/<candidate_hash>")
@@ -346,3 +346,45 @@ def submit_votes():
             return jsonify({"success": False, "message": msg}), 500
 
     return jsonify({"success": True})
+
+
+@main.route("/submit_vote", methods=["POST"])
+@login_required
+def submit_vote():
+    """
+    Submits a single vote { position_id, candidate_id } and returns JSON status.
+    Intended for step-by-step UI feedback on the client side.
+    """
+    if is_admin(current_user):
+        return jsonify({"success": False, "message": "Admins cannot vote"}), 403
+
+    try:
+        data = request.get_json(force=True)
+        position_id = int(data.get("position_id"))
+        candidate_id = int(data.get("candidate_id"))
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid payload"}), 400
+
+    # Resolve candidate
+    candidate = fetch_candidate_by_id(candidate_id)
+    if not candidate:
+        return jsonify({"success": False, "message": "Candidate not found"}), 404
+
+    blockchain = Blockchain(current_user.wallet_address, fetch_contract_address())
+
+    # Avoid duplicate votes per position
+    try:
+        hv = blockchain.has_user_voted(position_id, Web3.to_bytes(hexstr=current_user.username_hash))
+        if isinstance(hv, bool) and hv:
+            return jsonify({"success": True, "message": "Already voted"})
+    except Exception:
+        pass
+
+    private_key = decrypt_object(current_user.private_key_encrypted)
+    ok, msg = blockchain.vote(
+        private_key,
+        position_id,
+        current_user.username_hash,
+        candidate.candidate_hash,
+    )
+    return jsonify({"success": bool(ok), "message": msg})

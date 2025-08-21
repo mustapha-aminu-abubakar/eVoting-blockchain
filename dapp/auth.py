@@ -75,7 +75,7 @@ def signup():
     """
     Displays the signup page for new voters.
     """
-    return render_template("signup.html")
+    return render_template("signup2.html")
 
 
 @auth.route("/signin", methods=["POST"])

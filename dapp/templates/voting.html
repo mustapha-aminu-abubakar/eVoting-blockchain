@@ -166,6 +166,10 @@
             <div class="px-6 py-5">
               <p class="text-gray-600 mb-4">Please confirm your choices below. You can vote for only one candidate per position.</p>
               <ul id="confirmList" class="divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden"></ul>
+              <div id="progressArea" class="hidden mt-4 p-3 rounded bg-blue-50 text-blue-800 text-sm">
+                <span id="progressStatus">Submitting votes to blockchain...</span>
+                <div id="progressItems" class="mt-2 space-y-2"></div>
+              </div>
               <p class="text-amber-600 text-sm mt-4">Note: Submissions are final and will be recorded on the blockchain.</p>
             </div>
 
@@ -296,29 +300,83 @@
       confirmCancelBtn.addEventListener('click', closeConfirm);
       document.getElementById('confirmCloseBtn').addEventListener('click', closeConfirm);
 
-      // Confirm & submit
+      // Confirm & submit with per-vote progress UI
       confirmSubmitBtn.addEventListener('click', async () => {
-        const payload = [];
+        if (selections.size === 0) return;
+        const progressArea = document.getElementById('progressArea');
+        const progressItems = document.getElementById('progressItems');
+        const progressStatus = document.getElementById('progressStatus');
+        progressArea.classList.remove('hidden');
+        progressItems.innerHTML = '';
+
+        // Build queue of votes
+        const queue = [];
         selections.forEach((val, key) => {
-          payload.push({ position_id: parseInt(key), candidate_id: parseInt(val.candidateId) });
+          queue.push({ position_id: parseInt(key), candidate_id: parseInt(val.candidateId), candidate_name: val.candidateName });
         });
-        try {
-          const res = await fetch(`${window.location.origin}${window.location.pathname.replace(/\/vote$/, '')}/submit_votes`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ votes: payload })
-          });
-          const data = await res.json();
-          if (data.success) {
-            closeConfirm();
-            document.getElementById('votingPage').classList.add('hidden');
-            document.getElementById('votingCompleteView').classList.remove('hidden');
-          } else {
-            alert(data.message || 'Submission failed');
+
+        // Create UI rows for each pending vote
+        queue.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between bg-white border border-blue-100 rounded p-2';
+          row.dataset.positionId = item.position_id;
+          row.innerHTML = `
+            <span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+            <span class="flex items-center gap-2 text-blue-700">
+              <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+              <span>Pending</span>
+            </span>`;
+          progressItems.appendChild(row);
+        });
+
+        // Disable buttons during submission
+        confirmSubmitBtn.disabled = true;
+        confirmCancelBtn.disabled = true;
+
+        // Submit sequentially for deterministic UX
+        const base = `${window.location.origin}${window.location.pathname.replace(/\/vote$/, '')}`;
+        for (const item of queue) {
+          const row = progressItems.querySelector(`[data-position-id="${item.position_id}"]`);
+          try {
+            const res = await fetch(`${base}/submit_vote`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ position_id: item.position_id, candidate_id: item.candidate_id })
+            });
+            const data = await res.json();
+            if (data.success) {
+              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                <span class="flex items-center gap-2 text-green-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                  <span>Submitted</span>
+                </span>`;
+            } else {
+              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                <span class="flex items-center gap-2 text-red-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Failed</span>
+                </span>`;
+              progressStatus.textContent = data.message || 'One or more votes failed.';
+              // Continue to next vote to try remaining ones
+            }
+          } catch (e) {
+            if (row) {
+              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                <span class="flex items-center gap-2 text-red-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                  <span>Network error</span>
+                </span>`;
+            }
           }
-        } catch (e) {
-          alert('Network error while submitting votes');
         }
+
+        confirmSubmitBtn.disabled = false;
+        confirmCancelBtn.disabled = false;
+
+        // After processing, close modal and show success view (even if some failed)
+        closeConfirm();
+        document.getElementById('votingPage').classList.add('hidden');
+        document.getElementById('votingCompleteView').classList.remove('hidden');
       });
 
       updateUI();

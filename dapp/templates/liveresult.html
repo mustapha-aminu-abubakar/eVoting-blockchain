@@ -76,7 +76,32 @@
       <!-- Results Content -->
       <main class="flex-1 py-8 px-6">
         <div id="resultsContainer" class="max-w-6xl mx-auto">
-          <!-- Sections injected by JS -->
+          {% if results %}
+            {% for r in results %}
+            <section class="bg-white rounded-lg shadow p-6 mb-6">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-900">{{ r.position }}</h2>
+                {% if r.is_winner and r.vote_count > 0 %}
+                  <span class="px-3 py-1 text-xs rounded bg-green-100 text-green-700">Winner</span>
+                {% endif %}
+              </div>
+              <div class="mt-4 grid md:grid-cols-2 gap-4 items-center">
+                <div>
+                  <p class="text-gray-800"><span class="font-medium">Candidate:</span> {{ r.candidate.name }}</p>
+                  <p class="text-gray-500 text-sm break-all"><span class="font-medium text-gray-700">Hash:</span> {{ r.candidate_hash }}</p>
+                </div>
+                <div class="text-right">
+                  <span class="inline-flex items-center justify-center rounded-full bg-blue-600 text-white text-sm px-3 py-1">Votes: {{ r.vote_count }}</span>
+                </div>
+              </div>
+              <div class="mt-4">
+                <a href="{{ url_for('main.result_by_candidate', candidate_hash=r.candidate_hash) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded hover:bg-black">View Votes</a>
+              </div>
+            </section>
+            {% endfor %}
+          {% else %}
+            <div class="bg-white rounded p-6 text-center text-gray-600">No results available.</div>
+          {% endif %}
         </div>
       </main>
 
