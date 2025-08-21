@@ -164,8 +164,8 @@ def signup_post():
 
     # Get input details
     username = request.form.get("username").strip()
-    password = request.form.get("pwd").strip()
-    confirm_password = request.form.get("cnf_pwd").strip()
+    password = request.form.get("password").strip()
+    confirm_password = request.form.get("confirmPassword").strip()
     email = request.form.get("email").strip()
 
     # Create hashs

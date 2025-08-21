@@ -110,7 +110,6 @@ contract EVoting {
 
     // ✅ NEW: Finalizes the results on-chain
     function publishResults() public onlyAdmin {
-        require(block.timestamp > endVotingTime, "Voting still ongoing");
         require(!resultsPublished, "Already published");
 
         resultsPublished = true;

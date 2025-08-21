@@ -208,11 +208,28 @@ def result():
     Displays the published election results.
 
     - Fetches all results and renders the results page.
+    - Handles potential database errors gracefully
     """
+    try:
+        # Fetch all published results from database
+        results = fetch_all_results()
+        
+        # Add helper data for template rendering
+        for r in results:
+            if hasattr(r, 'vote_count') and hasattr(r, 'position'):
+                # Mark winner for positions
+                r.is_winner = False
+                if r.vote_count > 0:
+                    # Find max votes for this position
+                    position_results = [x for x in results if x.position == r.position]
+                    max_votes = max(x.vote_count for x in position_results)
+                    if r.vote_count == max_votes:
+                        r.is_winner = True
 
-    # Fetches admin published results
-    results = fetch_all_results()
-    return render_template("liveresult.html", results=results)
+        return render_template("liveresult.html", results=results)
+    except Exception as e:
+        flash(f"Error fetching election results: {str(e)}", "error")
+        return render_template("liveresult.html", results=[])
 
 
 @main.route("/results/<candidate_hash>")
