@@ -14,13 +14,8 @@
       <nav class="bg-black text-white py-4 px-6 relative z-50">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
           <!-- Logo -->
-          <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
-              <svg class="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
-              </svg>
-            </div>
-            <span class="text-xl font-bold">VoteNow</span>
+            <div class="flex items-center space-x-2">
+            <img src="{{ url_for('static', filename='images/logoWhite.png') }}" alt="VoteNow Logo" class="w-40 h-8 rounded" />
             <span class="text-gray-400">|</span>
             <span class="text-gray-300">COEN Exhibition 2025</span>
           </div>
@@ -105,7 +100,7 @@
                 <p class="text-gray-600">It's time to make your voice heard</p>
               </div>
               <div class="mt-4 md:mt-0">
-                {% if dt.now().isoformat() >= start_time %}
+                {% if end_time >= dt.now().isoformat() and dt.now().isoformat() >= start_time %}
                 <a href="{{ url_for('main.vote') }}">
                 <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
                   <span>Cast Your Vote Now</span>
@@ -202,12 +197,7 @@
           </div>
           <div class="flex flex-col md:flex-row justify-between items-center border-t border-gray-700 pt-6">
             <div class="flex items-center space-x-2 mb-4 md:mb-0">
-              <div class="w-6 h-6 bg-white rounded flex items-center justify-center">
-                <svg class="w-4 h-4 text-black" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm4.3-12.7a1 1 0 10-1.414-1.414L10 12.772 9.114 11.886a1 1 0 10-1.414 1.414l1.586 1.586a1 1 0 001.414 0L16.3 9.3z"/>
-                </svg>
-              </div>
-              <span class="text-lg font-bold">VoteNow</span>
+                <img src="{{ url_for('static', filename='images/logoWhite.png') }}" alt="VoteNow Logo" class="w-40 h-8 rounded" />
             </div>
             <div class="text-center md:text-right">
               <p class="text-gray-400 text-sm">2025 Vote-Now. All rights reserves.</p>
