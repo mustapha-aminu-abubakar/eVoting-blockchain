@@ -226,9 +226,6 @@
         const daysBox = document.getElementById('daysBox');
         const hoursBox = document.getElementById('hoursBox');
         const minutesBox = document.getElementById('minutesBox');
-        // const daysText = document.getElementById('startCountdownDays');
-        // const hoursText = document.getElementById('startCountdownHours');
-        // const minutesText = document.getElementById('startCountdownMinutes');
 
         function pad2(n) { return String(n).padStart(2, '0'); }
 
@@ -248,14 +245,37 @@
           if (daysBox) daysBox.textContent = pad2(days);
           if (hoursBox) hoursBox.textContent = pad2(hours);
           if (minutesBox) minutesBox.textContent = pad2(minutes);
-          // if (daysText) daysText.textContent = `${days}`;
-          // if (hoursText) hoursText.textContent = `${hours}`;
-          // if (minutesText) minutesText.textContent = `${minutes}`;
         }
 
         updateCountdown();
         setInterval(updateCountdown, 1000);
       })();
+
+      // Mobile Menu Toggle Logic
+      document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const menuIcon = document.getElementById('menuIcon');
+        const closeIcon = document.getElementById('closeIcon');
+
+        mobileMenuToggle.addEventListener('click', () => {
+          // Toggle mobile navigation
+          mobileNav.classList.toggle('hidden');
+          
+          // Toggle icons
+          menuIcon.classList.toggle('hidden');
+          closeIcon.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!mobileMenuToggle.contains(e.target) && !mobileNav.contains(e.target)) {
+            mobileNav.classList.add('hidden');
+            menuIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+          }
+        });
+      });
     </script>
   </body>
   </html>

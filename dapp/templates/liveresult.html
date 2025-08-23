@@ -168,8 +168,32 @@
         </div>
       </footer>
     </div>
+    <script>
+      // Mobile Menu Toggle Logic
+      document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const menuIcon = document.getElementById('menuIcon');
+        const closeIcon = document.getElementById('closeIcon');
+
+        mobileMenuToggle.addEventListener('click', () => {
+          // Toggle mobile navigation
+          mobileNav.classList.toggle('hidden');
+          
+          // Toggle icons
+          menuIcon.classList.toggle('hidden');
+          closeIcon.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!mobileMenuToggle.contains(e.target) && !mobileNav.contains(e.target)) {
+            mobileNav.classList.add('hidden');
+            menuIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+          }
+        });
+      });
+    </script>
   </body>
   </html>
-
-
-

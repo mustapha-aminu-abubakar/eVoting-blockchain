@@ -94,36 +94,53 @@
           </div>
 
           <!-- Voting Sections -->
-          <div id="positionsContainer" class="space-y-8">
+          <div id="positionsContainer" class="space-y-4">
             {% if positions_data %}
               {% for p in positions_data %}
-              <section class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between mb-4">
+              <section class="bg-white rounded-lg shadow">
+                <!-- Position Header - Always visible -->
+                <button class="position-header w-full flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors md:hover:bg-white md:cursor-default">
                   <h2 class="text-2xl font-semibold text-gray-900">{{ p.name }}</h2>
-                </div>
-                <div class="grid md:grid-cols-3 gap-6" data-position-id="{{ p.id }}">
-                  {% for c in p.candidates %}
-                  <div class="border rounded-lg p-4 bg-gray-50">
-                    <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center">
-                      <img
-                        src="{{ c.image_url | default('/images/default-candidate.png', true) }}"
-                        alt="{{ c.name }}"
-                        class="w-full h-full object-cover"
-                        onerror="this.style.display='none'"
-                      />
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-900 text-center">{{ c.name }}</h3>
-                    <p class="text-sm text-gray-500 text-center">Candidate {{ loop.index }}</p>
-                    <div class="mt-4">
-                      <button
-                        class="select-vote-btn inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full"
-                        data-position-id="{{ p.id }}"
-                        data-candidate-id="{{ c.id }}"
-                        data-candidate-name="{{ c.name }}"
-                      >Select</button>
+                  <div class="md:hidden flex items-center">
+                    <span class="selected-icon hidden mr-2">
+                      <svg class="w-3 h-3 text-green-600" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                      </svg>
+                    </span>
+                    <svg class="w-6 h-6 text-gray-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
+                </button>
+                
+                <!-- Candidates Container -->
+                <div class="position-content hidden md:block border-t border-gray-100">
+                  <div class="p-6">
+                    <div class="grid md:grid-cols-3 gap-6" data-position-id="{{ p.id }}">
+                      {% for c in p.candidates %}
+                      <div class="border rounded-lg p-4 bg-gray-50">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center">
+                          <img
+                            src="{{ c.image_url | default('/images/default-candidate.png', true) }}"
+                            alt="{{ c.name }}"
+                            class="w-full h-full object-cover"
+                            onerror="this.style.display='none'"
+                          />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 text-center">{{ c.name }}</h3>
+                        <p class="text-xs text-gray-500 text-center break-all">{{ c.candidate_hash[:20] }}...</p>
+                        <div class="mt-4">
+                          <button
+                            class="select-vote-btn inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full"
+                            data-position-id="{{ p.id }}"
+                            data-candidate-id="{{ c.id }}"
+                            data-candidate-name="{{ c.name }}"
+                          >Select</button>
+                        </div>
+                      </div>
+                      {% endfor %}
                     </div>
                   </div>
-                  {% endfor %}
                 </div>
               </section>
               {% endfor %}
@@ -133,11 +150,22 @@
           </div>
 
           <!-- Submit Button -->
-          <div class="text-center mt-12">
+          <div class="hidden md:block text-center mt-12">
             <button id="submitVotesBtn" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-lg">Submit All Votes</button>
             <p id="progressText" class="text-sm text-gray-500 mt-2">0 of 0 positions selected</p>
           </div>
+
+          <!-- Mobile Fixed Bottom Bar -->
+          <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 shadow-lg">
+            <div class="flex flex-col items-center max-w-4xl mx-auto">
+              <p id="mobileProgressText" class="text-sm font-medium text-gray-600 mb-3">0 of 0 positions selected</p>
+              <button id="mobileSubmitBtn" class="w-full bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-lg">Submit All Votes</button>
+            </div>
+          </div>
         </div>
+
+        <!-- Mobile Bottom Padding to prevent content being hidden behind fixed bar -->
+        <div class="h-32 md:hidden"></div>
 
         <!-- Confirmation Modal (Review selections before submitting) -->
         <div id="confirmModal" class="fixed inset-0 hidden z-50 p-4 items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -162,7 +190,7 @@
             <!-- Body -->
             <div class="px-6 py-5">
               <p class="text-gray-600 mb-4">Please confirm your choices below.</p>
-              <ul id="confirmList" class="divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden"></ul>
+              <ul id="confirmList" class="space-y-2"></ul>
               <div id="progressArea" class="hidden mt-4 p-3 rounded bg-blue-50 text-blue-800 text-sm">
                 <span id="progressStatus">Submitting votes to blockchain...</span>
                 <div id="progressItems" class="mt-2 space-y-2"></div>
@@ -219,10 +247,136 @@
       </footer>
     </div>
     <script>
+      // Mobile Menu Toggle Logic
+      document.addEventListener('DOMContentLoaded', () => {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const menuIcon = document.getElementById('menuIcon');
+        const closeIcon = document.getElementById('closeIcon');
+
+        mobileMenuToggle.addEventListener('click', () => {
+          // Toggle mobile navigation
+          mobileNav.classList.toggle('hidden');
+          
+          // Toggle icons
+          menuIcon.classList.toggle('hidden');
+          closeIcon.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!mobileMenuToggle.contains(e.target) && !mobileNav.contains(e.target)) {
+            mobileNav.classList.add('hidden');
+            menuIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+          }
+        });
+
+        // Accordion functionality for mobile
+        const positionHeaders = document.querySelectorAll('.position-header');
+        let activeSection = null;
+
+        function updatePositionHeader(header, isSelected) {
+          const arrow = header.querySelector('svg:last-child');
+          const selectedIcon = header.querySelector('.selected-icon');
+          const hasSelectedCandidate = header.closest('section')
+            .querySelector('.select-vote-btn.bg-red-600') !== null;
+          
+          if (isSelected) {
+            arrow.classList.add('rotate-180');
+            if (hasSelectedCandidate) {
+              selectedIcon.classList.remove('hidden');
+            }
+          } else {
+            arrow.classList.remove('rotate-180');
+            if (!hasSelectedCandidate) {
+              selectedIcon.classList.add('hidden');
+            }
+          }
+        }
+
+        function closeAllSections() {
+          positionHeaders.forEach(header => {
+            const content = header.nextElementSibling;
+            if (window.innerWidth < 768) { // Only on mobile
+              content.classList.add('hidden');
+              updatePositionHeader(header, false);
+            }
+          });
+        }
+
+        positionHeaders.forEach(header => {
+          header.addEventListener('click', () => {
+            if (window.innerWidth >= 768) return; // Don't handle clicks on desktop
+
+            const content = header.nextElementSibling;
+            const isOpening = content.classList.contains('hidden');
+
+            closeAllSections();
+
+            if (isOpening) {
+              content.classList.remove('hidden');
+              updatePositionHeader(header, true);
+              activeSection = header;
+              
+              // Scroll the section into view with some padding
+              setTimeout(() => {
+                const yOffset = -20; 
+                const y = header.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({top: y, behavior: 'smooth'});
+              }, 100);
+            } else {
+              content.classList.add('hidden');
+              updatePositionHeader(header, false);
+              activeSection = null;
+            }
+          });
+        });
+
+        // Update UI when a vote is cast
+        const originalUpdateUI = updateUI;
+        updateUI = function() {
+          originalUpdateUI();
+          
+          // Update selected icon visibility on mobile
+          positionHeaders.forEach(header => {
+            const section = header.closest('section');
+            const selectedIcon = header.querySelector('.selected-icon');
+            const hasSelectedCandidate = section.querySelector('.select-vote-btn.bg-red-600') !== null;
+            
+            if (hasSelectedCandidate) {
+              selectedIcon.classList.remove('hidden');
+            } else {
+              selectedIcon.classList.add('hidden');
+            }
+          });
+        };
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          if (window.innerWidth >= 768) {
+            // Show all sections on desktop
+            positionHeaders.forEach(header => {
+              const content = header.nextElementSibling;
+              content.classList.remove('hidden');
+            });
+          } else {
+            // On mobile, close all sections except active one
+            closeAllSections();
+            if (activeSection) {
+              const content = activeSection.nextElementSibling;
+              content.classList.remove('hidden');
+              updatePositionHeader(activeSection, true);
+            }
+          }
+        });
+      });
+
       (function(){
         const selections = new Map(); // positionId -> { candidateId, candidateName }
   
         function updatePositionUI(posId) {
+          // Update selection buttons
           const buttons = document.querySelectorAll(`.select-vote-btn[data-position-id="${posId}"]`);
           buttons.forEach(btn => {
             const candId = btn.getAttribute('data-candidate-id');
@@ -234,6 +388,15 @@
               btn.classList.add('bg-blue-600','hover:bg-blue-700');
             }
           });
+
+          // Update header selection icon
+          const section = document.querySelector(`[data-position-id="${posId}"]`).closest('section');
+          const selectedIcon = section.querySelector('.selected-icon');
+          if (selections.has(posId)) {
+            selectedIcon.classList.remove('hidden');
+          } else {
+            selectedIcon.classList.add('hidden');
+          }
         }
   
         function updateUI() {
@@ -241,10 +404,41 @@
           const posIds = new Set(Array.from(document.querySelectorAll('.select-vote-btn')).map(b => b.getAttribute('data-position-id')));
           posIds.forEach(pid => updatePositionUI(pid));
   
-          // Update progress text
+          // Update progress texts
           const progressText = document.getElementById('progressText');
-          progressText.textContent = `${selections.size} of ${posIds.size} positions selected`;
+          const mobileProgressText = document.getElementById('mobileProgressText');
+          const progressString = `${selections.size} of ${posIds.size} positions selected`;
+          progressText.textContent = progressString;
+          mobileProgressText.textContent = progressString;
         }
+  
+        // Sync submit buttons
+        const submitVotesBtn = document.getElementById('submitVotesBtn');
+        const mobileSubmitBtn = document.getElementById('mobileSubmitBtn');
+
+        function handleSubmitClick() {
+          if (selections.size === 0) return;
+          // Build list
+          confirmList.innerHTML = '';
+          const positionNameById = {};
+          // gather position names from headings
+          document.querySelectorAll('[data-position-id]').forEach(section => {
+            const pid = section.getAttribute('data-position-id');
+            const heading = section.closest('section').querySelector('h2');
+            if (heading) positionNameById[pid] = heading.textContent.trim();
+          });
+          selections.forEach((val, pid) => {
+            const li = document.createElement('li');
+            li.className = 'py-3 px-4 flex justify-between bg-gray-50 mb-2 rounded-lg';
+            li.innerHTML = `<span class="text-gray-800">${positionNameById[pid] || 'Position ' + pid}</span><span class="font-medium">${val.candidateName}</span>`;
+            confirmList.appendChild(li);
+          });
+          confirmModal.classList.remove('hidden');
+          confirmModal.classList.add('flex');
+        }
+
+        submitVotesBtn.addEventListener('click', handleSubmitClick);
+        mobileSubmitBtn.addEventListener('click', handleSubmitClick);
   
         // Attach click handlers
         document.addEventListener('click', (e) => {
@@ -279,7 +473,7 @@
           });
           selections.forEach((val, pid) => {
             const li = document.createElement('li');
-            li.className = 'py-2 flex justify-between';
+            li.className = 'py-3 px-4 flex justify-between bg-gray-50 mb-2 rounded-lg';
             li.innerHTML = `<span class="text-gray-800">${positionNameById[pid] || 'Position ' + pid}</span><span class="font-medium">${val.candidateName}</span>`;
             confirmList.appendChild(li);
           });
