@@ -228,6 +228,7 @@ def result():
                     if r.vote_count == max_votes:
                         r.is_winner = True
 
+        print(results)
         return render_template("liveresult.html", results=results)
     except Exception as e:
         flash(f"Error fetching election results: {str(e)}", "error")

@@ -27,7 +27,7 @@
           <svg class="w-16 h-16 text-green-500 mx-auto mb-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm-1 15l-4-4 1.414-1.414L11 13.172l4.586-4.586L17 10z"/></svg>
           <h1 class="text-3xl font-bold text-gray-900 mb-4">Vote Submitted!</h1>
           <p class="text-gray-600 mb-6">Thank you for participating in the COEN Exhibition 2025. Your votes have been recorded successfully.</p>
-          <button id="viewResultsBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">View Results</button>
+          <!-- <button id="viewResultsBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">View Results</button> -->
         </div>
       </main>
       <footer class="bg-black text-white py-8 px-6">
@@ -501,7 +501,17 @@
           // Build queue of votes
           const queue = [];
           selections.forEach((val, key) => {
-            queue.push({ position_id: parseInt(key), candidate_id: parseInt(val.candidateId), candidate_name: val.candidateName });
+            // Find the candidate hash from the button element
+            const button = document.querySelector(`.select-vote-btn[data-position-id="${key}"][data-candidate-id="${val.candidateId}"]`);
+            const candidateDiv = button.closest('.border');
+            const hashElement = candidateDiv.querySelector('.text-xs.text-gray-500');
+            const candidateHash = hashElement ? hashElement.textContent : '';
+            queue.push({ 
+              position_id: parseInt(key), 
+              candidate_id: parseInt(val.candidateId), 
+              candidate_name: val.candidateName,
+              candidate_hash: candidateHash
+            });
           });
   
           // Create UI rows for each pending vote
@@ -510,7 +520,7 @@
             row.className = 'flex items-center justify-between bg-white border border-blue-100 rounded p-2';
             row.dataset.positionId = item.position_id;
             row.innerHTML = `
-              <span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+              <span class="text-sm break-all">Hash: ${item.candidate_hash}</span>
               <span class="flex items-center gap-2 text-blue-700">
                 <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
                 <span>Pending</span>
@@ -534,13 +544,13 @@
               });
               const data = await res.json();
               if (data.success) {
-                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                row.innerHTML = `<span class="text-sm break-all">Hash: ${item.candidate_hash}</span>
                   <span class="flex items-center gap-2 text-green-700">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
                     <span>Submitted</span>
                   </span>`;
               } else {
-                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                row.innerHTML = `<span class="text-sm break-all">Hash: ${item.candidate_hash}</span>
                   <span class="flex items-center gap-2 text-red-700">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     <span>Failed</span>
@@ -550,7 +560,7 @@
               }
             } catch (e) {
               if (row) {
-                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                row.innerHTML = `<span class="text-sm break-all">Hash: ${item.candidate_hash}</span>
                   <span class="flex items-center gap-2 text-red-700">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
                     <span>Network error</span>
@@ -566,6 +576,11 @@
           closeConfirm();
           document.getElementById('votingPage').classList.add('hidden');
           document.getElementById('votingCompleteView').classList.remove('hidden');
+          
+          // Redirect to home page after 3 seconds
+          setTimeout(() => {
+            window.location.href = "{{ url_for('main.home') }}";
+          }, 3000);
         });
   
         updateUI();

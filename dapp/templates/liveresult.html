@@ -73,63 +73,128 @@
 
       <!-- Results Content -->
       <main class="flex-1 py-8 px-6">
-        <div id="resultsContainer" class="max-w-6xl mx-auto">
+        <div id="resultsContainer" class="max-w-6xl mx-auto space-y-12">
           {% if results %}
-            {% set current_position = None %}
+            {# Group results by position #}
+            {% set positions = {} %}
             {% for r in results %}
-              {% if current_position != r.position %}
-                {% if not loop.first %}
-                  </div> <!-- Close previous position container -->
-                {% endif %}
-                <div class="mb-8">
-                  <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">{{ r.position }}</h2>
-                {% set current_position = r.position %}
+              {% if r.position not in positions %}
+                {% set _ = positions.update({r.position: []}) %}
               {% endif %}
-              
-              <section class="bg-white rounded-lg shadow p-6 mb-4 transform transition-all hover:shadow-lg">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
-                        </svg>
+              {% set _ = positions[r.position].append(r) %}
+            {% endfor %}
+
+            {# Display positions and their candidates #}
+            {% for position, candidates in positions.items() %}
+              <div class="position-section">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200">{{ position }}</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {# Sort candidates by winner status and then by vote count #}
+                  {% for candidate in candidates|sort(attribute='vote_count', reverse=true)|sort(attribute='is_winner', reverse=true) %}
+                    <section class="bg-white rounded-lg shadow p-4 md:p-6 transform transition-all hover:shadow-lg">
+                      <!-- Desktop Layout -->
+                      <div class="hidden md:flex items-start space-x-6">
+                        <!-- Image and Basic Info -->
+                        <div class="flex-shrink-0">
+                          <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
+                            <img 
+                              src="{{ candidate.candidate.image_url | default(url_for('static', filename='images/default-candidate.png'), true) }}"
+                              alt="{{ candidate.candidate.name }}"
+                              class="w-full h-full object-cover"
+                              onerror="this.src='{{ url_for('static', filename='images/default-candidate.png') }}'"
+                            />
+                          </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1">
+                          <div class="flex items-start justify-between">
+                            <div>
+                              <h3 class="text-xl font-semibold text-gray-900">{{ candidate.candidate.name }}</h3>
+                              <p class="text-gray-500 text-sm mt-1 break-all font-mono">{{ candidate.candidate_hash }}</p>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                              <span class="inline-flex items-center justify-center rounded-full {% if candidate.is_winner and candidate.vote_count > 0 %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %} text-sm px-4 py-1.5 font-medium">
+                                {{ candidate.vote_count }} votes
+                              </span>
+                              {% if candidate.is_winner and candidate.vote_count > 0 %}
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                  </svg>
+                                  Winner
+                                </span>
+                              {% endif %}
+                            </div>
+                          </div>
+
+                          <!-- Desktop View Details Button -->
+                          <div class="mt-4 flex justify-end">
+                            <a href="{{ url_for('main.result_by_candidate', candidate_hash=candidate.candidate_hash) }}" 
+                              class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded hover:bg-black transition-colors duration-200">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                              </svg>
+                              View Details
+                            </a>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <h3 class="text-lg font-semibold text-gray-900">{{ r.candidate.name }}</h3>
-                      <p class="text-gray-500 text-sm break-all">{{ r.candidate_hash }}</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center space-x-3">
-                    <span class="inline-flex items-center justify-center rounded-full {% if r.is_winner and r.vote_count > 0 %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %} text-sm px-3 py-1 font-medium">
-                      {{ r.vote_count }} votes
-                    </span>
-                    {% if r.is_winner and r.vote_count > 0 %}
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                        </svg>
-                        Winner
-                      </span>
-                    {% endif %}
-                  </div>
+
+                      <!-- Mobile Layout -->
+                      <div class="md:hidden space-y-4">
+                        <!-- Image and Basic Info -->
+                        <div class="flex items-center space-x-4">
+                          <div class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                            <img 
+                              src="{{ candidate.candidate.image_url | default(url_for('static', filename='images/default-candidate.png'), true) }}"
+                              alt="{{ candidate.candidate.name }}"
+                              class="w-full h-full object-cover"
+                              onerror="this.src='{{ url_for('static', filename='images/default-candidate.png') }}'"
+                            />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <h3 class="text-lg font-semibold text-gray-900 truncate">{{ candidate.candidate.name }}</h3>
+                            {% if candidate.is_winner and candidate.vote_count > 0 %}
+                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                Winner
+                              </span>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                        <!-- Votes Count -->
+                        <div class="flex justify-center">
+                          <span class="inline-flex items-center justify-center rounded-full {% if candidate.is_winner and candidate.vote_count > 0 %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %} text-lg px-6 py-2 font-medium">
+                            {{ candidate.vote_count }} votes
+                          </span>
+                        </div>
+
+                        <!-- Hash -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                          <p class="text-xs text-gray-500 break-all font-mono">{{ candidate.candidate_hash }}</p>
+                        </div>
+
+                        <!-- View Details Button -->
+                        <a href="{{ url_for('main.result_by_candidate', candidate_hash=candidate.candidate_hash) }}" 
+                          class="block w-full text-center px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors duration-200">
+                          <span class="inline-flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            View Details
+                          </span>
+                        </a>
+                      </div>
+                    </section>
+                  {% endfor %}
                 </div>
-                <div class="mt-4 flex justify-end">
-                  <a href="{{ url_for('main.result_by_candidate', candidate_hash=r.candidate_hash) }}" 
-                     class="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded hover:bg-black transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    View Details
-                  </a>
-                </div>
-              </section>
-              
-              {% if loop.last %}
-                </div> <!-- Close last position container -->
-              {% endif %}
+              </div>
             {% endfor %}
           {% else %}
             <div class="bg-white rounded-lg shadow p-8 text-center">
