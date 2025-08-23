@@ -34,7 +34,7 @@ class Voter(database.Model, LockableMixin, UserMixin):
     password = database.Column(database.String(88), nullable=False)
 
     wallet_address = database.Column(
-        database.String(42), unique=True, nullable=False, default=""
+        database.String(42), unique=False, nullable=False, default=""
     )
 
     private_key_encrypted = database.Column(

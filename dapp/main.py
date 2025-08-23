@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for, session, jsonify
 from flask_login import current_user, login_required
 from web3 import Web3
+from datetime import datetime as dt
 
 from .db_operations import (
     add_new_vote_record,
@@ -48,12 +49,13 @@ def home():
             and len(res) == 2
             and isinstance(res[0], int)
         ):
-            start_unix, _end_unix = res
+            start_unix, end_unix = res
             start_time_iso = datetime.fromtimestamp(start_unix, tz=timezone.utc).isoformat()
+            end_time_iso = datetime.fromtimestamp(end_unix, tz=timezone.utc).isoformat()
     except Exception:
         start_time_iso = None
-
-    return render_template("home.html", start_time=start_time_iso)
+        end_time_iso = None
+    return render_template("home.html", start_time=start_time_iso, end_time=end_time_iso, dt=dt)
 
 
 @main.route("/positions")
@@ -273,13 +275,13 @@ def vote():
 
     for position in positions:
         # Check vote status on-chain
-        try:
-            status = blockchain.has_user_voted(
-                position.id, Web3.to_bytes(hexstr=current_user.username_hash)
-            )
-            has_voted_for_position[position.id] = bool(status) if isinstance(status, bool) else False
-        except Exception:
-            has_voted_for_position[position.id] = False
+        # try:
+        #     status = blockchain.has_user_voted(
+        #         position.id, Web3.to_bytes(hexstr=current_user.username_hash)
+        #     )
+        #     has_voted_for_position[position.id] = bool(status) if isinstance(status, bool) else False
+        # except Exception:
+        #     has_voted_for_position[position.id] = False
 
         # Pull candidate hashes from chain and map to DB records
         candidate_objs = []
@@ -297,7 +299,7 @@ def vote():
                 "id": position.id,
                 "name": position.position,
                 "candidates": candidate_objs,
-                "has_voted": has_voted_for_position[position.id],
+                # "has_voted": has_voted_for_position[position.id],
             }
         )
 
@@ -308,61 +310,61 @@ def vote():
     )
 
 
-@main.route("/submit_votes", methods=["POST"])
-@login_required
-def submit_votes():
-    """
-    Accepts a JSON payload with an array of { position_id, candidate_id } and
-    casts votes sequentially. Stops on first failure and reports status.
-    """
-    if is_admin(current_user):
-        return jsonify({"success": False, "message": "Admins cannot vote"}), 403
+# @main.route("/submit_votes", methods=["POST"])
+# @login_required
+# def submit_votes():
+#     """
+#     Accepts a JSON payload with an array of { position_id, candidate_id } and
+#     casts votes sequentially. Stops on first failure and reports status.
+#     """
+#     if is_admin(current_user):
+#         return jsonify({"success": False, "message": "Admins cannot vote"}), 403
 
-    try:
-        data = request.get_json(force=True)
-        votes = data.get("votes", [])
-        if not isinstance(votes, list) or not votes:
-            return jsonify({"success": False, "message": "No votes provided"}), 400
-    except Exception:
-        return jsonify({"success": False, "message": "Invalid payload"}), 400
+#     try:
+#         data = request.get_json(force=True)
+#         votes = data.get("votes", [])
+#         if not isinstance(votes, list) or not votes:
+#             return jsonify({"success": False, "message": "No votes provided"}), 400
+#     except Exception:
+#         return jsonify({"success": False, "message": "Invalid payload"}), 400
 
-    # Prepare for on-chain voting
-    blockchain = Blockchain(current_user.wallet_address, fetch_contract_address())
-    private_key = decrypt_object(current_user.private_key_encrypted)
+#     # Prepare for on-chain voting
+#     blockchain = Blockchain(current_user.wallet_address, fetch_contract_address())
+#     private_key = decrypt_object(current_user.private_key_encrypted)
 
-    for item in votes:
-        try:
-            position_id = int(item.get("position_id"))
-            candidate_id = int(item.get("candidate_id"))
-        except Exception:
-            return jsonify({"success": False, "message": "Invalid vote entry"}), 400
+#     for item in votes:
+#         try:
+#             position_id = int(item.get("position_id"))
+#             candidate_id = int(item.get("candidate_id"))
+#         except Exception:
+#             return jsonify({"success": False, "message": "Invalid vote entry"}), 400
 
-        # Resolve candidate_hash from DB
-        candidate = fetch_candidate_by_id(candidate_id)
-        if not candidate:
-            return jsonify({"success": False, "message": f"Candidate {candidate_id} not found"}), 404
+#         # Resolve candidate_hash from DB
+#         candidate = fetch_candidate_by_id(candidate_id)
+#         if not candidate:
+#             return jsonify({"success": False, "message": f"Candidate {candidate_id} not found"}), 404
 
-        # Check if already voted for position
-        try:
-            has_voted = blockchain.has_user_voted(
-                position_id, Web3.to_bytes(hexstr=current_user.username_hash)
-            )
-            if isinstance(has_voted, bool) and has_voted:
-                continue  # skip silently; alternatively, fail fast
-        except Exception:
-            pass
+#         # Check if already voted for position
+#         try:
+#             has_voted = blockchain.has_user_voted(
+#                 position_id, Web3.to_bytes(hexstr=current_user.username_hash)
+#             )
+#             if isinstance(has_voted, bool) and has_voted:
+#                 continue  # skip silently; alternatively, fail fast
+#         except Exception:
+#             pass
 
-        # Cast vote
-        ok, msg = blockchain.vote(
-            private_key,
-            position_id,
-            current_user.username_hash,
-            candidate.candidate_hash,
-        )
-        if not ok:
-            return jsonify({"success": False, "message": msg}), 500
+#         # Cast vote
+#         ok, msg = blockchain.vote(
+#             private_key,
+#             position_id,
+#             current_user.username_hash,
+#             candidate.candidate_hash,
+#         )
+#         if not ok:
+#             return jsonify({"success": False, "message": msg}), 500
 
-    return jsonify({"success": True})
+#     return jsonify({"success": True})
 
 
 @main.route("/submit_vote", methods=["POST"])

@@ -22,16 +22,15 @@
             </div>
             <span class="text-xl font-bold">VoteNow</span>
             <span class="text-gray-400">|</span>
-            <span class="text-gray-300">HOD Election</span>
+            <span class="text-gray-300">COEN Exhibition 2025</span>
           </div>
 
           <!-- Desktop Navigation -->
           <div class="hidden md:flex items-center space-x-8">
-            <a href="#"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
-            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Aspirants</button></a>
-            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Live Results</button></a>
-            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
-            <a href="#"><button class="transition-colors text-gray-300 hover:text-white">Sign Out</button></a>
+            <a href="{{ url_for('main.home') }}"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="{{ url_for('main.result') }}"><button class="transition-colors text-gray-300 hover:text-white">Results</button></a>
+            <a href="{{ url_for('main.vote') }}"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="{{ url_for('auth.logout') }}" class="transition-colors text-gray-300 hover:text-white">Log Out</a>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -48,11 +47,10 @@
         <!-- Mobile Navigation -->
         <div id="mobileNav" class="md:hidden mt-4 pb-4 border-t border-gray-700 hidden">
           <div class="flex flex-col space-y-4 mt-4">
-            <a href="#"><button class="text-left transition-colors text-yellow-400 font-medium">Home</button></a>
-            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Aspirants</button></a>
-            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Live Results</button></a>
-            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Voting</button></a>
-            <a href="#"><button class="text-left transition-colors text-gray-300 hover:text-white">Sign Out</button></a>
+            <a href="{{ url_for('main.home') }}"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="{{ url_for('main.result') }}"><button class="transition-colors text-gray-300 hover:text-white">Results</button></a>
+            <a href="{{ url_for('main.vote') }}"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="{{ url_for('auth.logout') }}" class="transition-colors text-gray-300 hover:text-white">Log Out</a>
           </div>
         </div>
       </nav>
@@ -73,7 +71,7 @@
               <h1 class="text-4xl md:text-6xl font-bold mb-6">
                 <span class="text-yellow-400">Voting</span><br />
                 <span class="text-yellow-400">Made Easy</span><br />
-                <span class="text-white">HOD ELECTION</span>
+                <span class="text-white">COEN Exhibition 2025</span>
               </h1>
             </div>
 
@@ -82,10 +80,9 @@
               <div class="bg-black bg-opacity-50 rounded-lg p-6 inline-block">
                 <h3 class="text-white text-lg mb-4">Time Remaining</h3>
                 <div class="flex items-center space-x-8">
-                  <div id="daysBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">02</div>
-                  <div id="hoursBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">12</div>
-                  <!-- <span class="text-white text-xl">:</span> -->
-                  <div id="minutesBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">45</div>
+                  <div id="daysBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">--</div>
+                  <div id="hoursBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">--</div>
+                  <div id="minutesBox" class="bg-white text-black px-3 py-2 rounded font-bold text-xl">--</div>
                 </div>
                 <div class="flex justify-center md:justify-end space-x-8 mt-2 text-sm text-gray-300">
                   <span>DAYS</span>
@@ -108,22 +105,23 @@
                 <p class="text-gray-600">It's time to make your voice heard</p>
               </div>
               <div class="mt-4 md:mt-0">
-                {% if start_time %}
-                <a href="{{ url_for('main.positions') }}">
+                {% if dt.now().isoformat() >= start_time %}
+                <a href="{{ url_for('main.vote') }}">
                 <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
                   <span>Cast Your Vote Now</span>
                   <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">LIVE</span>
                   <span>→</span>
                 </button>
                 </a>
+                <p class="text-xs text-gray-500 mt-1">Voting is open now</p>
                 {% else %}
                 <button id="voteNowBtn" class="bg-gray-400 text-gray-200 px-8 py-4 rounded-lg font-medium cursor-not-allowed flex items-center space-x-2" disabled>
                   <span>Cast Your Vote Now</span>
                   <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">NOT LIVE</span>
                   <span>→</span>
                 </button>
+                <p class="text-xs text-gray-500 mt-1">Voting is not yet open</p>
                 {% endif %}
-                <p class="text-xs text-gray-500 mt-1">Voting is open now</p>
               </div>
             </div>
           </div>
@@ -141,7 +139,7 @@
             <div class="order-1 md:order-2">
               <h3 class="text-2xl font-bold text-gray-900 mb-4">Empowering Democracy Through Secure Digital Voting</h3>
               <p class="text-gray-600 mb-6 leading-relaxed">
-                This project introduces a minimalist, blockchain-powered E-voting platform that lets eligible citizens vote securely from anywhere. Each vote is tamper-proof, verifiable, and transparently recorded on a distributed ledger.
+                This project introduces a minimalist, blockchain-powered E-voting platform that lets eligible individuals vote securely from anywhere. Each vote is tamper-proof, verifiable, and transparently recorded on a distributed ledger.
               </p>
               <p class="text-gray-600 leading-relaxed">
                 Our mission is to modernize elections by reducing fraud, cutting costs, and increasing participation through a decentralized, user-friendly system built for trust, accessibility, and mobile use.
@@ -161,7 +159,7 @@
         </div>
       </section>
 
-      <!-- Election Ongoing -->
+      <!-- Election Ongoing
       <section class="py-16 px-6 bg-black text-white">
         <div class="max-w-6xl mx-auto text-center">
           <h2 class="text-3xl md:text-4xl font-bold mb-12">Election Ongoing</h2>
@@ -169,10 +167,10 @@
             <div>
               <h3 class="text-xl mb-6">Time Remaining</h3>
               <div class="flex justify-center space-x-8 mb-8">
-                <div class="bg-yellow-500 text-black px-4 py-3 rounded font-bold text-2xl">02</div>
-                <div class="bg-green-500 text-black px-4 py-3 rounded font-bold text-2xl">12</div>
+                <div class="bg-yellow-500 text-black px-4 py-3 rounded font-bold text-2xl">--</div>
+                <div class="bg-green-500 text-black px-4 py-3 rounded font-bold text-2xl">--</div>
                 <span class="text-2xl">:</span>
-                <div class="bg-red-500 text-white px-4 py-3 rounded font-bold text-2xl">45</div>
+                <div class="bg-red-500 text-white px-4 py-3 rounded font-bold text-2xl">--</div>
               </div>
               <div class="flex justify-center space-x-8 text-sm text-gray-300">
                 <span>DAYS</span>
@@ -191,7 +189,7 @@
             </div>
           </div>
         </div>
-      </section>
+      </section> -->
 
       <!-- Footer -->
       <footer class="bg-black text-white py-8 px-6">
@@ -220,11 +218,11 @@
     </div>
     <script>
       (function() {
-        const startTimeStr = "{{ start_time or '' }}";
-        console.log(startTimeStr);
-        if (!startTimeStr) return;
+        const endTimeStr = "{{ end_time or '' }}";
+        console.log(endTimeStr);
+        if (!endTimeStr) return;
 
-        const startMs = new Date(startTimeStr).getTime();
+        const endMs = new Date(endTimeStr).getTime();
         const daysBox = document.getElementById('daysBox');
         const hoursBox = document.getElementById('hoursBox');
         const minutesBox = document.getElementById('minutesBox');
@@ -236,7 +234,7 @@
 
         function updateCountdown() {
           const now = Date.now();
-          let diff = startMs - now;
+          let diff = endMs - now;
           if (diff < 0) diff = 0;
 
           const dayMs = 24 * 60 * 60 * 1000;

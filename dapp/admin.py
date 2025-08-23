@@ -105,12 +105,12 @@ def publish_results():
             print(f'Could not enter votes: {e}')
         
         # Locks Voter, Vote and Result models, preventing manipulation
-        Voter.lock_all(database.session)
-        Vote.lock_all(database.session)
-        Result.lock_all(database.session)
-        sys.stdout.write(f'Voter model is_locked: {Voter.is_locked(database.session)}')
-        sys.stdout.write(f'Votes model is_locked: {Vote.is_locked(database.session)}')
-        sys.stdout.write(f'Result model is_locked: {Result.is_locked(database.session)}')
+        # Voter.lock_all(database.session)
+        # Vote.lock_all(database.session)
+        # Result.lock_all(database.session)
+        # sys.stdout.write(f'Voter model is_locked: {Voter.is_locked(database.session)}')
+        # sys.stdout.write(f'Votes model is_locked: {Vote.is_locked(database.session)}')
+        # sys.stdout.write(f'Result model is_locked: {Result.is_locked(database.session)}')
         flash(f"Results published. Tx: {tx_receipt}")
     
     return redirect(url_for('admin.admin_panel'))

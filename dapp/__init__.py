@@ -131,7 +131,7 @@ def create_app():
     """
     
     WORKING_DIRECTORY = os.getcwd() # Gets the current working directory
-    DB_NAME = "offchain121.sqlite" # Database name
+    DB_NAME = "offchain1.sqlite" # Database name
     CANDIDATES_DIR = f"{WORKING_DIRECTORY}/CSV/candidates.csv" # Candidates CSV file path
     POSITIONS_DIR = f"{WORKING_DIRECTORY}/CSV/positions.csv" # Positions CSV file path
     ADMIN_DIR = f"{WORKING_DIRECTORY}/admin/admin.json" # Admin user details JSON file path
@@ -139,7 +139,9 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "secret-key"
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_NAME}"
+    # app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///:memory:"
     app.config["EPOCH"] = not os.path.exists(f"{WORKING_DIRECTORY}/instance/{DB_NAME}")
+    print(f"{WORKING_DIRECTORY}/instance/{DB_NAME}")
     app.config["SQLALCHEMY_ECHO"] = False
 
     database.init_app(app)

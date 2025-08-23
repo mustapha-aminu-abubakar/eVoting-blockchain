@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Voting</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="app.css" />
-    <script src="app.js" defer></script>
+    <!-- <link rel="stylesheet" href="app.css" /> -->
   </head>
   <body>
     <!-- Voting Complete View -->
@@ -19,7 +18,7 @@
             </div>
             <span class="text-xl font-bold">VoteNow</span>
             <span class="text-gray-400">|</span>
-            <span class="text-gray-300">HOD Election</span>
+            <span class="text-gray-300">COEN Exhibition 2025</span>
           </div>
         </div>
       </nav>
@@ -27,7 +26,7 @@
         <div class="text-center max-w-md">
           <svg class="w-16 h-16 text-green-500 mx-auto mb-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm-1 15l-4-4 1.414-1.414L11 13.172l4.586-4.586L17 10z"/></svg>
           <h1 class="text-3xl font-bold text-gray-900 mb-4">Vote Submitted!</h1>
-          <p class="text-gray-600 mb-6">Thank you for participating in the HOD Election. Your votes have been recorded successfully.</p>
+          <p class="text-gray-600 mb-6">Thank you for participating in the COEN Exhibition 2025. Your votes have been recorded successfully.</p>
           <button id="viewResultsBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">View Results</button>
         </div>
       </main>
@@ -56,16 +55,15 @@
             </div>
             <span class="text-xl font-bold">VoteNow</span>
             <span class="text-gray-400">|</span>
-            <span class="text-gray-300">HOD Election</span>
+            <span class="text-gray-300">COEN Exhibition 2025</span>
           </div>
 
           <!-- Desktop Navigation -->
           <div class="hidden md:flex items-center space-x-8">
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Home</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Aspirants</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Live Results</a>
-            <a href="#" class="text-yellow-400 hover:text-yellow-300 transition-colors font-medium">Voting</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Sign Out</a>
+            <a href="{{ url_for('main.home') }}"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="{{ url_for('main.result') }}"><button class="transition-colors text-gray-300 hover:text-white">Results</button></a>
+            <a href="{{ url_for('main.vote') }}"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="{{ url_for('auth.logout') }}" class="transition-colors text-gray-300 hover:text-white">Log Out</a>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -78,11 +76,10 @@
         <!-- Mobile Navigation -->
         <div id="mobileNav" class="md:hidden mt-4 pb-4 border-t border-gray-700 hidden">
           <div class="flex flex-col space-y-4 mt-4">
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Home</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Aspirants</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Live Results</a>
-            <a href="#" class="text-yellow-400 hover:text-yellow-300 transition-colors font-medium">Voting</a>
-            <a href="#" class="text-gray-300 hover:text-white transition-colors">Sign Out</a>
+            <a href="{{ url_for('main.home') }}"><button class="transition-colors text-yellow-400 font-medium">Home</button></a>
+            <a href="{{ url_for('main.result') }}"><button class="transition-colors text-gray-300 hover:text-white">Results</button></a>
+            <a href="{{ url_for('main.vote') }}"><button class="transition-colors text-gray-300 hover:text-white">Voting</button></a>
+            <a href="{{ url_for('auth.logout') }}" class="transition-colors text-gray-300 hover:text-white">Log Out</a>
           </div>
         </div>
       </nav>
@@ -146,7 +143,7 @@
         <div id="confirmModal" class="fixed inset-0 hidden z-50 p-4 items-center justify-center bg-black/60 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
             <!-- Header -->
-            <div class="relative px-6 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+            <div class="relative px-6 py-5 bg-black text-white">
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -164,7 +161,7 @@
 
             <!-- Body -->
             <div class="px-6 py-5">
-              <p class="text-gray-600 mb-4">Please confirm your choices below. You can vote for only one candidate per position.</p>
+              <p class="text-gray-600 mb-4">Please confirm your choices below.</p>
               <ul id="confirmList" class="divide-y divide-gray-200 rounded-lg border border-gray-200 overflow-hidden"></ul>
               <div id="progressArea" class="hidden mt-4 p-3 rounded bg-blue-50 text-blue-800 text-sm">
                 <span id="progressStatus">Submitting votes to blockchain...</span>
@@ -221,167 +218,168 @@
         </div>
       </footer>
     </div>
+    <script>
+      (function(){
+        const selections = new Map(); // positionId -> { candidateId, candidateName }
+  
+        function updatePositionUI(posId) {
+          const buttons = document.querySelectorAll(`.select-vote-btn[data-position-id="${posId}"]`);
+          buttons.forEach(btn => {
+            const candId = btn.getAttribute('data-candidate-id');
+            const isSelected = selections.has(posId) && selections.get(posId).candidateId === candId;
+            btn.classList.remove('bg-red-600','hover:bg-red-700','bg-blue-600','hover:bg-blue-700');
+            if (isSelected) {
+              btn.classList.add('bg-red-600','hover:bg-red-700');
+            } else {
+              btn.classList.add('bg-blue-600','hover:bg-blue-700');
+            }
+          });
+        }
+  
+        function updateUI() {
+          // Update all positions' UI
+          const posIds = new Set(Array.from(document.querySelectorAll('.select-vote-btn')).map(b => b.getAttribute('data-position-id')));
+          posIds.forEach(pid => updatePositionUI(pid));
+  
+          // Update progress text
+          const progressText = document.getElementById('progressText');
+          progressText.textContent = `${selections.size} of ${posIds.size} positions selected`;
+        }
+  
+        // Attach click handlers
+        document.addEventListener('click', (e) => {
+          const btn = e.target.closest('.select-vote-btn');
+          if (!btn) return;
+          const posId = btn.getAttribute('data-position-id');
+          const candId = btn.getAttribute('data-candidate-id');
+          const candName = btn.getAttribute('data-candidate-name');
+  
+          // Toggle selection for this position: only one candidate allowed
+          selections.set(posId, { candidateId: candId, candidateName: candName });
+          updatePositionUI(posId);
+          updateUI();
+        });
+  
+        // Open confirm modal on Submit click
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmList = document.getElementById('confirmList');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+  
+        document.getElementById('submitVotesBtn').addEventListener('click', () => {
+          if (selections.size === 0) return;
+          // Build list
+          confirmList.innerHTML = '';
+          const positionNameById = {};
+          // gather position names from headings
+          document.querySelectorAll('[data-position-id]').forEach(section => {
+            const pid = section.getAttribute('data-position-id');
+            const heading = section.closest('section').querySelector('h2');
+            if (heading) positionNameById[pid] = heading.textContent.trim();
+          });
+          selections.forEach((val, pid) => {
+            const li = document.createElement('li');
+            li.className = 'py-2 flex justify-between';
+            li.innerHTML = `<span class="text-gray-800">${positionNameById[pid] || 'Position ' + pid}</span><span class="font-medium">${val.candidateName}</span>`;
+            confirmList.appendChild(li);
+          });
+          confirmModal.classList.remove('hidden');
+          confirmModal.classList.add('flex');
+        });
+  
+        function closeConfirm() {
+          confirmModal.classList.add('hidden');
+          confirmModal.classList.remove('flex');
+        }
+  
+        confirmCancelBtn.addEventListener('click', closeConfirm);
+        document.getElementById('confirmCloseBtn').addEventListener('click', closeConfirm);
+  
+        // Confirm & submit with per-vote progress UI
+        confirmSubmitBtn.addEventListener('click', async () => {
+          if (selections.size === 0) return;
+          const progressArea = document.getElementById('progressArea');
+          const progressItems = document.getElementById('progressItems');
+          const progressStatus = document.getElementById('progressStatus');
+          progressArea.classList.remove('hidden');
+          progressItems.innerHTML = '';
+  
+          // Build queue of votes
+          const queue = [];
+          selections.forEach((val, key) => {
+            queue.push({ position_id: parseInt(key), candidate_id: parseInt(val.candidateId), candidate_name: val.candidateName });
+          });
+  
+          // Create UI rows for each pending vote
+          queue.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between bg-white border border-blue-100 rounded p-2';
+            row.dataset.positionId = item.position_id;
+            row.innerHTML = `
+              <span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+              <span class="flex items-center gap-2 text-blue-700">
+                <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                <span>Pending</span>
+              </span>`;
+            progressItems.appendChild(row);
+          });
+  
+          // Disable buttons during submission
+          confirmSubmitBtn.disabled = true;
+          confirmCancelBtn.disabled = true;
+  
+          // Submit sequentially for deterministic UX
+          const base = `${window.location.origin}${window.location.pathname.replace(/\/vote$/, '')}`;
+          for (const item of queue) {
+            const row = progressItems.querySelector(`[data-position-id="${item.position_id}"]`);
+            try {
+              const res = await fetch(`${base}/submit_vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ position_id: item.position_id, candidate_id: item.candidate_id })
+              });
+              const data = await res.json();
+              if (data.success) {
+                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                  <span class="flex items-center gap-2 text-green-700">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                    <span>Submitted</span>
+                  </span>`;
+              } else {
+                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                  <span class="flex items-center gap-2 text-red-700">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Failed</span>
+                  </span>`;
+                progressStatus.textContent = data.message || 'One or more votes failed.';
+                // Continue to next vote to try remaining ones
+              }
+            } catch (e) {
+              if (row) {
+                row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
+                  <span class="flex items-center gap-2 text-red-700">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Network error</span>
+                  </span>`;
+              }
+            }
+          }
+  
+          confirmSubmitBtn.disabled = false;
+          confirmCancelBtn.disabled = false;
+  
+          // After processing, close modal and show success view (even if some failed)
+          closeConfirm();
+          document.getElementById('votingPage').classList.add('hidden');
+          document.getElementById('votingCompleteView').classList.remove('hidden');
+        });
+  
+        updateUI();
+      })();
+    </script>
   </body>
   </html>
-  <script>
-    (function(){
-      const selections = new Map(); // positionId -> { candidateId, candidateName }
-
-      function updatePositionUI(posId) {
-        const buttons = document.querySelectorAll(`.select-vote-btn[data-position-id="${posId}"]`);
-        buttons.forEach(btn => {
-          const candId = btn.getAttribute('data-candidate-id');
-          const isSelected = selections.has(posId) && selections.get(posId).candidateId === candId;
-          btn.classList.remove('bg-red-600','hover:bg-red-700','bg-blue-600','hover:bg-blue-700');
-          if (isSelected) {
-            btn.classList.add('bg-red-600','hover:bg-red-700');
-          } else {
-            btn.classList.add('bg-blue-600','hover:bg-blue-700');
-          }
-        });
-      }
-
-      function updateUI() {
-        // Update all positions' UI
-        const posIds = new Set(Array.from(document.querySelectorAll('.select-vote-btn')).map(b => b.getAttribute('data-position-id')));
-        posIds.forEach(pid => updatePositionUI(pid));
-
-        // Update progress text
-        const progressText = document.getElementById('progressText');
-        progressText.textContent = `${selections.size} of ${posIds.size} positions selected`;
-      }
-
-      // Attach click handlers
-      document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.select-vote-btn');
-        if (!btn) return;
-        const posId = btn.getAttribute('data-position-id');
-        const candId = btn.getAttribute('data-candidate-id');
-        const candName = btn.getAttribute('data-candidate-name');
-
-        // Toggle selection for this position: only one candidate allowed
-        selections.set(posId, { candidateId: candId, candidateName: candName });
-        updatePositionUI(posId);
-        updateUI();
-      });
-
-      // Open confirm modal on Submit click
-      const confirmModal = document.getElementById('confirmModal');
-      const confirmList = document.getElementById('confirmList');
-      const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-      const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
-
-      document.getElementById('submitVotesBtn').addEventListener('click', () => {
-        if (selections.size === 0) return;
-        // Build list
-        confirmList.innerHTML = '';
-        const positionNameById = {};
-        // gather position names from headings
-        document.querySelectorAll('[data-position-id]').forEach(section => {
-          const pid = section.getAttribute('data-position-id');
-          const heading = section.closest('section').querySelector('h2');
-          if (heading) positionNameById[pid] = heading.textContent.trim();
-        });
-        selections.forEach((val, pid) => {
-          const li = document.createElement('li');
-          li.className = 'py-2 flex justify-between';
-          li.innerHTML = `<span class="text-gray-800">${positionNameById[pid] || 'Position ' + pid}</span><span class="font-medium">${val.candidateName}</span>`;
-          confirmList.appendChild(li);
-        });
-        confirmModal.classList.remove('hidden');
-        confirmModal.classList.add('flex');
-      });
-
-      function closeConfirm() {
-        confirmModal.classList.add('hidden');
-        confirmModal.classList.remove('flex');
-      }
-
-      confirmCancelBtn.addEventListener('click', closeConfirm);
-      document.getElementById('confirmCloseBtn').addEventListener('click', closeConfirm);
-
-      // Confirm & submit with per-vote progress UI
-      confirmSubmitBtn.addEventListener('click', async () => {
-        if (selections.size === 0) return;
-        const progressArea = document.getElementById('progressArea');
-        const progressItems = document.getElementById('progressItems');
-        const progressStatus = document.getElementById('progressStatus');
-        progressArea.classList.remove('hidden');
-        progressItems.innerHTML = '';
-
-        // Build queue of votes
-        const queue = [];
-        selections.forEach((val, key) => {
-          queue.push({ position_id: parseInt(key), candidate_id: parseInt(val.candidateId), candidate_name: val.candidateName });
-        });
-
-        // Create UI rows for each pending vote
-        queue.forEach(item => {
-          const row = document.createElement('div');
-          row.className = 'flex items-center justify-between bg-white border border-blue-100 rounded p-2';
-          row.dataset.positionId = item.position_id;
-          row.innerHTML = `
-            <span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
-            <span class="flex items-center gap-2 text-blue-700">
-              <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
-              <span>Pending</span>
-            </span>`;
-          progressItems.appendChild(row);
-        });
-
-        // Disable buttons during submission
-        confirmSubmitBtn.disabled = true;
-        confirmCancelBtn.disabled = true;
-
-        // Submit sequentially for deterministic UX
-        const base = `${window.location.origin}${window.location.pathname.replace(/\/vote$/, '')}`;
-        for (const item of queue) {
-          const row = progressItems.querySelector(`[data-position-id="${item.position_id}"]`);
-          try {
-            const res = await fetch(`${base}/submit_vote`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ position_id: item.position_id, candidate_id: item.candidate_id })
-            });
-            const data = await res.json();
-            if (data.success) {
-              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
-                <span class="flex items-center gap-2 text-green-700">
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                  <span>Submitted</span>
-                </span>`;
-            } else {
-              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
-                <span class="flex items-center gap-2 text-red-700">
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                  <span>Failed</span>
-                </span>`;
-              progressStatus.textContent = data.message || 'One or more votes failed.';
-              // Continue to next vote to try remaining ones
-            }
-          } catch (e) {
-            if (row) {
-              row.innerHTML = `<span class="text-sm">Position ${item.position_id} • <span class="font-medium">${item.candidate_name}</span></span>
-                <span class="flex items-center gap-2 text-red-700">
-                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                  <span>Network error</span>
-                </span>`;
-            }
-          }
-        }
-
-        confirmSubmitBtn.disabled = false;
-        confirmCancelBtn.disabled = false;
-
-        // After processing, close modal and show success view (even if some failed)
-        closeConfirm();
-        document.getElementById('votingPage').classList.add('hidden');
-        document.getElementById('votingCompleteView').classList.remove('hidden');
-      });
-
-      updateUI();
-    })();
-  </script>
+  
 
 
 

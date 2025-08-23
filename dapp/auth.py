@@ -42,7 +42,7 @@ def index():
     """
     Displays the login page and handles user session redirection.
 
-    - If the user is not authenticated, shows the login page.
+    - If the user is not authenticated, shows the signin2 page.
     - If the user is an admin, redirects to the admin panel.
     - If the user is a voter, redirects to the candidate positions page.
     - Locks all candidates and positions if not already locked.
@@ -58,16 +58,16 @@ def index():
             database.session
         )  # Lock all positions to prevent modifications
 
-    # Returns to root page if user is not already registered
+    # Returns to signin2 page if user is not already registered
     if not current_user.is_authenticated:
-        return render_template("index.html")
+        return render_template("signin2.html")
 
     # Redirects to admin panel if user is admin
     if is_admin(current_user):
         return redirect(url_for("admin.admin_panel"))
 
     # Redirects to candidate positions page
-    return redirect(url_for("main.home"))
+    return redirect(url_for("main.vote"))
 
 
 @auth.route("/signup")
@@ -83,21 +83,21 @@ def signin_post():
     """
     Handles POST requests for user login (voters and admin).
 
-    - Validates credentials and user status.
+    - Validates credentials and user status using email as username.
     - Redirects to OTP verification if needed.
     - Starts a login session and redirects based on user role.
     - Handles blocked users and incorrect credentials.
     """
 
-    # Get the input credentials
+    # Get the input credentials from the new signin2 form
     username = request.form.get("username").strip()
-    password = request.form.get("pwd").strip()
+    password = request.form.get("password").strip()
 
-    # Username HASH
+    # Use email as username for hashing
     username_hash = Web3.keccak(text=username).hex()
 
     # Validate the inputs
-    valid, msg = validate_signin(username, password)
+    valid, msg = validate_signin(username_hash, password)
     if not valid:
         flash(msg)
         return redirect(url_for("auth.index"))
@@ -112,7 +112,7 @@ def signin_post():
 
     # If OTP is not verified
     if is_unverified_account(username_hash):
-        return render_template("otp.html", username_hash=username_hash)
+        return render_template("otpverification.html", username_hash=username_hash)
 
     # Input password check
     if not check_password_hash(voter.password, password):
@@ -138,7 +138,7 @@ def signin_post():
 
     # Start login session
     login_user(voter)
-    return redirect(url_for("main.positions"))
+    return redirect(url_for("main.home"))
 
 
 @auth.route("/logout")
@@ -212,7 +212,7 @@ def signup_post():
             generate_password_hash(otp),
         )
 
-        return render_template("otp.html", username_hash=username_hash)
+        return render_template("otpverification.html", username_hash=username_hash, email=email)
 
 
 @auth.route("/verify_otp/<string:username_hash>", methods=["POST"])
@@ -245,4 +245,4 @@ def verify_otp_post(username_hash):
         return redirect(url_for("auth.index"))
 
     flash("Incorrect OTP")
-    return render_template("otp.html", username_hash=username_hash)
+    return render_template("otpverification.html", username_hash=username_hash)

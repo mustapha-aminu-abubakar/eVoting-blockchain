@@ -130,7 +130,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 100000,
+                    "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -162,7 +162,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 100000,
+                    "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -286,7 +286,7 @@ class Blockchain:
                     "chainId": self.sepolia,
                     "from": self._wallet_address,
                     "nonce": self._get_nonce(),
-                    "gas": 100000,
+                    "gas": 200000,
                     "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
                     "maxPriorityFeePerGas": self.w3.eth.gas_price // 2,
                     "type": 2,  # EIP-1559 transaction type
@@ -341,7 +341,7 @@ class Blockchain:
         sys.stdout.write(f' \r Sending Tx ... ')
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         sys.stdout.write(f' \r Waiting for Tx receipt ... ')
-        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=240)
 
         # Log transaction, add to off-chain database
         add_txn(
@@ -372,7 +372,7 @@ class Blockchain:
             tx = {
                 "to": to_address,
                 "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.002 ETH in wei
-                "gas": 21000,
+                "gas": 100000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
                 "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
@@ -505,6 +505,9 @@ def fund_new_user_wallet(username_hash):
     private_key = new_wallet.key.hex()
     print(f"New wallet address: {address}")
     print(f"New wallet private key: {private_key}")
+    
+    user_wallet_update = None
+    e = None
 
     blockchain = Blockchain(fetch_admin_wallet_address(), fetch_admin_wallet_address())
 
