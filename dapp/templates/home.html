@@ -100,22 +100,31 @@
                 <p class="text-gray-600">It's time to make your voice heard</p>
               </div>
               <div class="mt-4 md:mt-0">
-                {% if start_time and dt.now().isoformat() >= start_time %}
-                <a href="{{ url_for('main.vote') }}">
-                <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                  <span>Cast Your Vote Now</span>
-                  <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">LIVE</span>
-                  <span>→</span>
-                </button>
-                </a>
-                <p class="text-xs text-gray-500 mt-1">Voting is open now</p>
+                {% if start_time %}
+                  {% if current_time >= start_time and current_time <= end_time %}
+                    <a href="{{ url_for('main.vote') }}">
+                    <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                      <span>Cast Your Vote Now</span>
+                      <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">LIVE</span>
+                      <span>→</span>
+                    </button>
+                    </a>
+                    <p class="text-xs text-gray-500 mt-1">Voting is open now</p>
+                  {% else %}
+                    <button id="voteNowBtn" class="bg-gray-400 text-gray-200 px-8 py-4 rounded-lg font-medium cursor-not-allowed flex items-center space-x-2" disabled>
+                      <span>Cast Your Vote Now</span>
+                      <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">NOT LIVE</span>
+                      <span>→</span>
+                    </button>
+                    <p class="text-xs text-gray-500 mt-1">Voting is not yet open</p>
+                  {% endif %}
                 {% else %}
-                <button id="voteNowBtn" class="bg-gray-400 text-gray-200 px-8 py-4 rounded-lg font-medium cursor-not-allowed flex items-center space-x-2" disabled>
-                  <span>Cast Your Vote Now</span>
-                  <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">NOT LIVE</span>
-                  <span>→</span>
-                </button>
-                <p class="text-xs text-gray-500 mt-1">Voting is not yet open</p>
+                  <button id="voteNowBtn" class="bg-gray-400 text-gray-200 px-8 py-4 rounded-lg font-medium cursor-not-allowed flex items-center space-x-2" disabled>
+                    <span>Cast Your Vote Now</span>
+                    <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded">NOT LIVE</span>
+                    <span>→</span>
+                  </button>
+                  <p class="text-xs text-gray-500 mt-1">Voting is not yet open</p>
                 {% endif %}
               </div>
             </div>
@@ -226,10 +235,11 @@
     <script>
       (function() {
         const endTimeStr = "{{ end_time or '' }}";
-        console.log(endTimeStr);
+        console.log('End time (UTC):', endTimeStr);
         if (!endTimeStr) return;
 
-        const endMs = new Date(endTimeStr).getTime();
+        // Parse the UTC ISO string directly
+        const endMs = Date.parse(endTimeStr);
         const daysBox = document.getElementById('daysBox');
         const hoursBox = document.getElementById('hoursBox');
         const minutesBox = document.getElementById('minutesBox');

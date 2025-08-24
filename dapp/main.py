@@ -1,7 +1,6 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for, session, jsonify
 from flask_login import current_user, login_required
 from web3 import Web3
-from datetime import datetime as dt
 
 from .db_operations import (
     add_new_vote_record,
@@ -55,7 +54,12 @@ def home():
     except Exception:
         start_time_iso = None
         end_time_iso = None
-    return render_template("home.html", start_time=start_time_iso, end_time=end_time_iso, dt=dt)
+    # Get current time in UTC
+    current_time = datetime.now(timezone.utc).isoformat()
+    return render_template("home.html", 
+                         start_time=start_time_iso, 
+                         end_time=end_time_iso, 
+                         current_time=current_time)
 
 
 @main.route("/positions")
@@ -374,6 +378,7 @@ def submit_vote():
     """
     Submits a single vote { position_id, candidate_id } and returns JSON status.
     Intended for step-by-step UI feedback on the client side.
+    Sends a confirmation email to the voter after successful vote submission.
     """
     if is_admin(current_user):
         return jsonify({"success": False, "message": "Admins cannot vote"}), 403
@@ -407,4 +412,24 @@ def submit_vote():
         current_user.username_hash,
         candidate.candidate_hash,
     )
+    
+    if ok:
+        try:
+            # Get position name
+            position = fetch_position_by_id(position_id)
+            
+            # Prepare vote details for email
+            vote_details = [{
+                'position': position.position,
+                'candidate': candidate.name
+            }]
+            
+            # Send confirmation email
+            from .mail_server import MailServer
+            mail_server = MailServer()
+            mail_server.send_vote_confirmation(current_user.email, vote_details)
+        except Exception as e:
+            # Log the error but don't fail the response since the vote was successful
+            print(f"Error sending confirmation email: {str(e)}")
+    
     return jsonify({"success": bool(ok), "message": msg})
