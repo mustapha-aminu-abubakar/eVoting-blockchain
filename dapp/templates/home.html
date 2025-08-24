@@ -100,7 +100,7 @@
                 <p class="text-gray-600">It's time to make your voice heard</p>
               </div>
               <div class="mt-4 md:mt-0">
-                {% if end_time >= dt.now().isoformat() and dt.now().isoformat() >= start_time %}
+                {% if start_time and dt.now().isoformat() >= start_time %}
                 <a href="{{ url_for('main.vote') }}">
                 <button id="voteNowBtn" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
                   <span>Cast Your Vote Now</span>
@@ -129,7 +129,7 @@
           <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">About the Project</h2>
           <div class="grid md:grid-cols-2 gap-12 items-center">
             <div class="order-2 md:order-1">
-              <img src="/images/votenow-project.png" alt="VoteNow Platform" class="rounded-lg shadow-lg w-full" />
+              <img src="{{ url_for('static', filename='images/blockchain.png') }}" alt="VoteNow Platform" class="rounded-lg shadow-lg w-full" />
             </div>
             <div class="order-1 md:order-2">
               <h3 class="text-2xl font-bold text-gray-900 mb-4">Empowering Democracy Through Secure Digital Voting</h3>
@@ -149,7 +149,24 @@
         <div class="max-w-6xl mx-auto">
           <h2 class="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">Meet the Team</h2>
           <div id="teamGrid" class="grid md:grid-cols-3 gap-8">
-            <!-- Team members injected by JS -->
+        <!-- Team Member 1 -->
+        <div class="bg-gray-50 rounded-lg shadow-lg p-6 flex flex-col items-center">
+          <img src="{{ url_for('static', filename='images/t1.png') }}" alt="Team Member 1" class="w-48 h-48 rounded-full mb-4 object-cover" />
+          <h4 class="text-xl font-bold text-gray-900 mb-1">Dr. Risikat F. Adebiyi</h4>
+          <p class="text-gray-600 text-sm">Project Supervisor</p>
+        </div>
+        <!-- Team Member 2 -->
+        <div class="bg-gray-50 rounded-lg shadow-lg p-6 flex flex-col items-center">
+          <img src="{{ url_for('static', filename='images/t2.png') }}" alt="Team Member 2" class="w-48 h-48 rounded-full mb-4 object-cover" />
+          <h4 class="text-xl font-bold text-gray-900 mb-1">Abubakar Mustapha Aminu</h4>
+          <p class="text-gray-600 text-sm">Backend Engineer</p>
+        </div>
+        <!-- Team Member 3 -->
+        <div class="bg-gray-50 rounded-lg shadow-lg p-6 flex flex-col items-center">
+          <img src="{{ url_for('static', filename='images/t3.png') }}" alt="Team Member 3" class="w-48 h-48 rounded-full mb-4 object-cover" />
+          <h4 class="text-xl font-bold text-gray-900 mb-1">Raji Abdulfatai Ridwan</h4>
+          <p class="text-gray-600 text-sm">Frontend Engineer</p>
+        </div>
           </div>
         </div>
       </section>
