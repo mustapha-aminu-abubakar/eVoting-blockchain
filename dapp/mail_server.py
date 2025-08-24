@@ -1,6 +1,7 @@
 import smtplib
 
 from .credentials import PASSWORD, SENDER_EMAIL
+from .cryptography import decrypt_object
 
 
 class MailServer:
@@ -54,12 +55,16 @@ eVoting System"""
         Sends a confirmation email for a submitted vote.
 
         Args:
-            receiver_email (str): The voter's email address.
+            receiver_email (str): The voter's encrypted email address.
             vote_details (list): List of dictionaries containing position and candidate details.
 
         Returns:
             dict: The result of the sendmail operation from smtplib.
         """
+
+        # Decrypt the email address
+        decrypted_email = decrypt_object(receiver_email)
+
         # Format vote details
         details_text = "\n".join([
             f"Position: {detail['position']}\n"
@@ -73,7 +78,7 @@ eVoting System"""
             server.starttls()
             server.ehlo()
             server.login(SENDER_EMAIL, PASSWORD)
-            result = server.sendmail(SENDER_EMAIL, receiver_email, message)
+            result = server.sendmail(SENDER_EMAIL, decrypted_email, message)
             server.quit()
 
             return result
