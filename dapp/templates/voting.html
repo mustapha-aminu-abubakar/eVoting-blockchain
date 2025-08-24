@@ -115,7 +115,7 @@
                       <div class="border rounded-lg p-4 bg-gray-50">
                         <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center">
                           <img
-                            src="{{ c.image_url | default(url_for('static', filename='images/default-candidate.png'), true) }}"
+                            src="{{ (url_for('static', filename='images/candidates/' + c.id + '.png') | default(url_for('static', filename='images/default-candidate.png'), true)) }}"
                             alt="{{ c.name }}"
                             class="w-full h-full object-cover"
                             onerror="this.style.display='none'"
