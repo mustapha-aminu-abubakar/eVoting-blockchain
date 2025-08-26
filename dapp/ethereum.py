@@ -371,7 +371,7 @@ class Blockchain:
             estimated_eth = 0.00000150  # Estimate: registering a candidate costs ~0.00000150 ETH
             tx = {
                 "to": to_address,
-                "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.00000150 ETH in wei
+                "value": self.w3.to_wei(estimated_eth, "ether") * Position.query.count(),  # 0.00000150 ETH in wei
                 "gas": 50000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
