@@ -368,11 +368,11 @@ class Blockchain:
         print("[fund_wallet] Buiding transaction ... ")
         try:
             # Use Web3.to_wei for ETH to wei conversion
-            estimated_eth = 0.002  # Estimate: registering a candidate costs ~0.002 ETH
+            estimated_eth = 0.00000150  # Estimate: registering a candidate costs ~0.00000150 ETH
             tx = {
                 "to": to_address,
-                "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.002 ETH in wei
-                "gas": 100000,
+                "value": self.w3.to_wei(estimated_eth, "ether") * Candidate.query.count(),  # 0.00000150 ETH in wei
+                "gas": 50000,
                 "nonce": self._get_nonce(),
                 "chainId": self.sepolia,
                 "maxFeePerGas": int(self.w3.eth.gas_price * 1.2),
