@@ -64,6 +64,7 @@ eVoting System"""
 
         # Decrypt the email address
         decrypted_email = decrypt_object(receiver_email)
+        print(f"Confirmation email to be sent to {decrypted_email}")
 
         # Format vote details
         details_text = "\n".join([
