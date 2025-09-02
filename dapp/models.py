@@ -80,7 +80,6 @@ class Candidate(database.Model, LockableMixin):
     # ✅ Add this field
     candidate_hash = database.Column(
         database.String(66),  # 0x-prefixed hex string of 32 bytes
-        unique=True,
         nullable=False,
     )
 
